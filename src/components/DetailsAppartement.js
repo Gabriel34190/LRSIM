@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
-import './DetailsAppartement.css';
+import '../css/DetailsAppartement.css';
 
 const DetailsAppartement = () => {
     const location = useLocation();
@@ -16,7 +16,12 @@ const DetailsAppartement = () => {
 
             <div className="details-photos">
                 {apartment.photos.map((photo, index) => (
-                    <img key={index} src={photo} alt={`Photo ${index + 1}`} className="details-photo" />
+                    <img
+                        key={index}
+                        src={photo}
+                        alt={apartment.description} // Change here to use a meaningful description
+                        className="details-photo"
+                    />
                 ))}
             </div>
 

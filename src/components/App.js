@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './Home';
 import Appartements from './Appartements';
 import DetailsAppartement from './DetailsAppartement';
+import '../css/App.css';  // Mise à jour du chemin vers le CSS
 
 const App = () => {
     return (
