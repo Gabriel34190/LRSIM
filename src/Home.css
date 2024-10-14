@@ -1,0 +1,68 @@
+/* src/components/Home.css */
+.home-container {
+    text-align: center;
+    padding: 50px;
+}
+
+.home-title {
+    font-size: 32px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.location-card {
+    display: inline-block;
+    margin-top: 30px;
+    cursor: pointer;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease;
+}
+
+.location-card:hover {
+    transform: scale(1.05);
+}
+
+.location-card img {
+    width: 300px;
+    height: 200px;
+    border-radius: 10px 10px 0 0;
+}
+
+.location-card p {
+    font-size: 18px;
+    font-weight: bold;
+    background-color: white;
+    margin: 0;
+    padding: 10px;
+    border-radius: 0 0 10px 10px;
+    color: #333;
+}
+
+.navbar {
+    background-color: #003366; /* Couleur de la barre de navigation */
+    padding: 10px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.navbar a {
+    color: white;
+    text-decoration: none;
+    margin: 0 15px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.navbar a:hover {
+    text-decoration: underline;
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: bold;
+    color: white;
+    margin-left: 20px;
+}
