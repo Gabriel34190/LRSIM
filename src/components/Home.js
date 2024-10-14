@@ -5,8 +5,14 @@ import '../css/Home.css';
 const Home = () => {
     const navigate = useNavigate();
 
-    const handleClick = () => {
+    const handleAppartementsClick = (e) => {
+        e.preventDefault(); // Empêche le comportement par défaut du lien
         navigate('/appartements');
+    };
+
+    const handleProprietairesClick = (e) => {
+        e.preventDefault();
+        navigate('/proprietaires');
     };
 
     return (
@@ -14,15 +20,21 @@ const Home = () => {
             <div className="navbar">
                 <div className="logo">LesRouchons.com</div>
                 <div>
-                    <a href="#home">Appartements</a>
-                    <a href="#proprietaires">Propriétaires</a>
-                    <a href="#accommodations">Accommodations</a>
+                    <a href="/appartements" onClick={handleAppartementsClick} className="nav-link">
+                        Appartements
+                    </a>
+                    <a href="/proprietaires" onClick={handleProprietairesClick} className="nav-link">
+                        Propriétaires
+                    </a>
+                    <a href="#accommodations" className="nav-link">
+                        Accommodations
+                    </a>
                 </div>
             </div>
 
             <div className="home-container">
                 <h1 className="home-title">Trouvez un logement !</h1>
-                <div className="location-card" onClick={handleClick}>
+                <div className="location-card" onClick={handleAppartementsClick}>
                     <img src="url_de_l_image_montpellier" alt="Montpellier" />
                     <p>Montpellier</p>
                 </div>

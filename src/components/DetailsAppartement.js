@@ -19,7 +19,7 @@ const DetailsAppartement = () => {
                     <img
                         key={index}
                         src={photo}
-                        alt={apartment.description} // Change here to use a meaningful description
+                        alt={apartment.description}
                         className="details-photo"
                     />
                 ))}
