@@ -1,20 +1,19 @@
-// src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './Home';
 import Appartements from './Appartements';
+import DetailsAppartement from './DetailsAppartement';
 
-function App() {
-  return (
-    <Router>
-      <Routes>
-        {/* Route vers la page d'accueil */}
-        <Route path="/" element={<Home />} />
-        {/* Route vers la page des appartements */}
-        <Route path="/appartements" element={<Appartements />} />
-      </Routes>
-    </Router>
-  );
-}
+const App = () => {
+    return (
+        <Router>
+            <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/appartements" element={<Appartements />} />
+                <Route path="/details-appartement" element={<DetailsAppartement />} />
+            </Routes>
+        </Router>
+    );
+};
 
 export default App;
