@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../css/Home.css';
+import MontpellierImage from '../images/Montpellier.jpeg'; // Assurez-vous que le chemin est correct
 
 const Home = () => {
     const navigate = useNavigate();
@@ -14,6 +15,7 @@ const Home = () => {
         e.preventDefault();
         navigate('/proprietaires');
     };
+
     const handleConnexionClick = (e) => {
         e.preventDefault();
         navigate('/connexion');
@@ -39,7 +41,7 @@ const Home = () => {
             <div className="home-container">
                 <h1 className="home-title">Trouvez un logement !</h1>
                 <div className="location-card" onClick={handleAppartementsClick}>
-                    <img src="url_de_l_image_montpellier" alt="Montpellier" />
+                    <img src={MontpellierImage} alt="Montpellier" />
                     <p>Montpellier</p>
                 </div>
             </div>
