@@ -40,3 +40,46 @@ Pour installer et exécuter le projet localement, suivez ces étapes :
    ```bash
    git clone https://github.com/votre-nom-utilisateur/LesRouchons.git
    cd LesRouchons
+
+2.  Installez les dépendances :
+   ```bash
+    npm install
+
+3.  Démarrez le serveur de développement :
+   ```bash
+    npm start
+    Ouvrez votre navigateur et accédez à http://localhost:3000.
+
+## Contribution
+
+Les contributions sont les bienvenues ! Si vous souhaitez contribuer au projet, veuillez suivre ces étapes :
+
+    Forkez le projet.
+    ```bash
+
+    Créez une branche pour votre fonctionnalité ou correction de bug :
+
+   ```bash
+    git checkout -b feature/ma-fonctionnalité
+
+Commitez vos modifications :
+
+   ```bash
+   git commit -m "Ajout de ma fonctionnalité"
+
+Poussez vers votre fork :
+
+   ```bash
+   git push origin feature/ma-fonctionnalité
+
+   Ouvrez une Pull Request sur le dépôt principal.
+
+## Contact
+
+Pour toute question ou suggestion, n'hésitez pas à me contacter :
+
+    Nom : Rouchon Gabriel
+    Email : rouchon.gabriel@gmail.com
+    Site Web : LesRouchons.com
+
+Merci de votre intérêt pour LesRouchons.com ! Nous espérons que notre plateforme vous aidera à trouver ou à louer votre logement idéal. 🏡✨
