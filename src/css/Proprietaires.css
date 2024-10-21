@@ -1,0 +1,45 @@
+/* Proprietaires.css */
+.content-container {
+    transition: filter 0.3s; /* Transition pour le flou */
+}
+
+.content-container.flipped {
+    filter: blur(5px); /* Applique un flou au contenu */
+}
+
+body-blurred .content-container {
+    filter: blur(5px); /* Applique le flou au contenu */
+}
+
+.dropdown-menu {
+    position: fixed;
+    top: 70px; /* Juste en dessous de la barre de navigation */
+    left: 0;
+    width: 300px; /* Largeur du menu */
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1000; /* S'assurer que le menu soit au-dessus des autres éléments */
+    padding: 20px;
+    border-radius: 8px;
+    text-align: left; /* Alignement du texte à gauche */
+    resize: horizontal; /* Permettre le redimensionnement horizontal */
+    overflow: auto; /* Permet de faire défiler le contenu si nécessaire */
+}
+
+.close-button {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    float: right; /* Aligner le bouton de fermeture à droite */
+}
+
+.dropdown-menu h2 {
+    font-size: 1.5em; /* Taille du titre dans le menu */
+    margin-bottom: 10px;
+}
+
+.dropdown-menu p {
+    font-size: 1.1em; /* Taille du texte dans le menu */
+    margin: 5px 0; /* Espacement vertical entre les paragraphes */
+}
