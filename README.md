@@ -38,39 +38,40 @@ Pour installer et exécuter le projet localement, suivez ces étapes :
 
 1. Clonez le dépôt :
    ```bash
-   git clone https://github.com/votre-nom-utilisateur/LesRouchons.git
+   git clone "le nom du repo"
    cd LesRouchons
+   ```
 
 2.  Installez les dépendances :
-   ```bash
+    ```bash
     npm install
+    ```
 
 3.  Démarrez le serveur de développement :
-   ```bash
+    ```
     npm start
-    Ouvrez votre navigateur et accédez à http://localhost:3000.
+    ```
+
+Ouvrez votre navigateur et accédez à http://localhost:3000.
 
 ## Contribution
 
 Les contributions sont les bienvenues ! Si vous souhaitez contribuer au projet, veuillez suivre ces étapes :
 
-    Forkez le projet.
-    ```bash
+Forkez le projet.
 
-    Créez une branche pour votre fonctionnalité ou correction de bug :
+Créez une branche pour votre fonctionnalité ou correction de bug :
 
-   ```bash
     git checkout -b feature/ma-fonctionnalité
 
 Commitez vos modifications :
-
-   ```bash
+```
    git commit -m "Ajout de ma fonctionnalité"
-
+```
 Poussez vers votre fork :
-
-   ```bash
+```
    git push origin feature/ma-fonctionnalité
+```
 
    Ouvrez une Pull Request sur le dépôt principal.
 
