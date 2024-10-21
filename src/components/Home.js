@@ -14,6 +14,10 @@ const Home = () => {
         e.preventDefault();
         navigate('/proprietaires');
     };
+    const handleConnexionClick = (e) => {
+        e.preventDefault();
+        navigate('/connexion');
+    };
 
     return (
         <div>
@@ -26,8 +30,8 @@ const Home = () => {
                     <a href="/proprietaires" onClick={handleProprietairesClick} className="nav-link">
                         Propriétaires
                     </a>
-                    <a href="#accommodations" className="nav-link">
-                        Accommodations
+                    <a href="/connexion" onClick={handleConnexionClick} className="nav-link">
+                        Connexion
                     </a>
                 </div>
             </div>
