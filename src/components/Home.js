@@ -1,13 +1,24 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { auth } from './firebase-config'; // Make sure this path is correct
 import '../css/Home.css';
-import MontpellierImage from '../images/Montpellier.jpeg'; // Assurez-vous que le chemin est correct
+import MontpellierImage from '../images/Montpellier.jpeg';
+import NewLocationForm from './NewLocationForm';
 
 const Home = () => {
     const navigate = useNavigate();
+    const [showForm, setShowForm] = useState(false);
+    const [user, setUser] = useState(null); // Track the logged-in user
+
+    useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged((currentUser) => {
+            setUser(currentUser);
+        });
+        return () => unsubscribe();
+    }, []);
 
     const handleAppartementsClick = (e) => {
-        e.preventDefault(); // Empêche le comportement par défaut du lien
+        e.preventDefault();
         navigate('/appartements');
     };
 
@@ -21,10 +32,28 @@ const Home = () => {
         navigate('/connexion');
     };
 
+    const toggleForm = () => {
+        setShowForm(!showForm);
+    };
+
+    const handleLogout = () => {
+        auth.signOut().then(() => {
+            setUser(null);
+            navigate('/');
+        }).catch((error) => {
+            console.error("Error during logout:", error);
+        });
+    };
+
     return (
         <div>
             <div className="navbar">
                 <div className="logo">LesRouchons.com</div>
+                {/* Connection status label */}
+                <div className="status-label">
+                    {user ? "Connected" : "Not Connected"}
+                </div>
+
                 <div>
                     <a href="/appartements" onClick={handleAppartementsClick} className="nav-link">
                         Appartements
@@ -32,9 +61,15 @@ const Home = () => {
                     <a href="/proprietaires" onClick={handleProprietairesClick} className="nav-link">
                         Propriétaires
                     </a>
-                    <a href="/connexion" onClick={handleConnexionClick} className="nav-link">
-                        Connexion
-                    </a>
+                    {user ? (
+                        <a href="/" onClick={(e) => { e.preventDefault(); handleLogout(); }} className="nav-link">
+                            Déconnexion
+                        </a>
+                    ) : (
+                        <a href="/connexion" onClick={handleConnexionClick} className="nav-link">
+                            Connexion
+                        </a>
+                    )}
                 </div>
             </div>
 
@@ -44,6 +79,18 @@ const Home = () => {
                     <img src={MontpellierImage} alt="Montpellier" />
                     <p>Montpellier</p>
                 </div>
+
+                {user && (
+                    <button className="add-location-button" onClick={toggleForm}>
+                        Ajouter un nouveau lieu
+                    </button>
+                )}
+
+                {showForm && (
+                    <div className="new-location-form">
+                        <NewLocationForm onClose={toggleForm} />
+                    </div>
+                )}
             </div>
         </div>
     );

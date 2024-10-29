@@ -1,0 +1,51 @@
+/* NewLocationForm.css */
+
+.new-location-form {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    max-width: 400px;
+    margin: auto;
+    text-align: center;
+}
+
+.new-location-form h2 {
+    margin-bottom: 15px;
+}
+
+.new-location-form label {
+    display: block;
+    text-align: left;
+    margin-bottom: 10px;
+}
+
+.new-location-form input,
+.new-location-form textarea {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.new-location-form button {
+    padding: 10px 20px;
+    margin: 10px 5px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.new-location-form .close-button {
+    background-color: #ddd;
+}
+
+.new-location-form .error {
+    color: red;
+}
+
+.new-location-form .success {
+    color: green;
+}

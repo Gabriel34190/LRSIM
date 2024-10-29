@@ -1,15 +1,19 @@
+/* Les Lieux*/
 .home-container {
     text-align: center;
     padding: 50px;
+    position: relative;
 }
 
+/* Titre Trovez un Logement */
 .home-title {
     font-size: 32px;
     font-weight: bold;
-    color: #333;
+    color: #333333;
     margin-bottom: 20px;
 }
 
+/* Ecart titre et lieux*/
 .location-card {
     display: inline-block;
     margin-top: 30px;
@@ -22,7 +26,7 @@
 .location-card:hover {
     transform: scale(1.05);
 }
-
+/* Location de l'image */
 .location-card img {
     width: 300px;
     height: 200px;
@@ -39,8 +43,9 @@
     color: #333;
 }
 
+/* Navbar Styles */
 .navbar {
-    background-color: #003366; /* Couleur de la barre de navigation */
+    background-color: #003366;
     padding: 10px 0;
     display: flex;
     justify-content: space-between;
@@ -64,4 +69,33 @@
     font-weight: bold;
     color: white;
     margin-left: 20px;
+}
+
+/* Status connecté*/
+.status-label {
+    font-size: 14px;
+    color: green;
+    background-color: #fff;
+    padding: 5px 10px;
+    border-radius: 5px;
+    position: absolute;
+    top: 55px;
+    right: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+
+/* Ajouter un nouveau lieu Button Styles */
+.add-location-button {
+    background-color: #3075f4;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    cursor: pointer;
+    margin-bottom: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    display: inline-block;
+
 }
