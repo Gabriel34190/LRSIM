@@ -79,8 +79,9 @@ const Home = () => {
                     <img src={MontpellierImage} alt="Montpellier" />
                     <p>Montpellier</p>
                 </div>
-
-                {user && (
+            </div>
+            <div className="button-addlocation">
+            {user && (
                     <button className="add-location-button" onClick={toggleForm}>
                         Ajouter un nouveau lieu
                     </button>
