@@ -29,7 +29,6 @@ const Proprietaires = () => {
             <div className="navbar">
                 <div className="logo">LesRouchons.com</div>
                 <div>
-                    <a href="/appartements" className="nav-link">Appartements</a>
                     <a href="/proprietaires" className="nav-link">Propriétaires</a>
                     <a href="/connexion" className="nav-link">Connexion</a>
                 </div>
