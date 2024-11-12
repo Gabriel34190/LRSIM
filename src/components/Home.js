@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { auth } from './firebase-config'; // Make sure this path is correct
+import { auth } from './firebase-config';
 import '../css/Home.css';
 import MontpellierImage from '../images/Montpellier.jpeg';
 import NewLocationForm from './NewLocationForm';
@@ -8,7 +8,7 @@ import NewLocationForm from './NewLocationForm';
 const Home = () => {
     const navigate = useNavigate();
     const [showForm, setShowForm] = useState(false);
-    const [user, setUser] = useState(null); // Track the logged-in user
+    const [user, setUser] = useState(null);
 
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged((currentUser) => {
@@ -81,16 +81,16 @@ const Home = () => {
                 </div>
             </div>
             <div className="button-addlocation">
-            {user && (
+                 {user && (
                     <button className="add-location-button" onClick={toggleForm}>
                         Ajouter un nouveau lieu
                     </button>
                 )}
 
-                {showForm && (
-                    <div className="new-location-form">
-                        <NewLocationForm onClose={toggleForm} />
-                    </div>
+                 {showForm && (
+                <div className="new-location-form">
+                    <NewLocationForm onClose={toggleForm} />
+                </div>
                 )}
             </div>
         </div>
