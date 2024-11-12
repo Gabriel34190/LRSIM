@@ -1,23 +1,24 @@
-// src/firebase-config.js
+// Import the functions you need from the SDKs
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";  // Importez les services nécessaires (auth)
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import { getAuth } from "firebase/auth"; // Authentification
+import { getFirestore } from "firebase/firestore"; // Firestore
+import { getStorage } from "firebase/storage"; // Storage
 
+// Nouveau Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyByW4FoPSdushkU7VRcZnQp9wPl-qnxl44",
-  authDomain: "lrsim-34bda.firebaseapp.com",
-  projectId: "lrsim-34bda",
-  storageBucket: "lrsim-34bda.appspot.com",
-  messagingSenderId: "945432086700",
-  appId: "1:945432086700:web:47581a502cd20bf23cb709",
-  measurementId: "G-5WVNBC3EDE"
+  apiKey: "AIzaSyCPrJBOLulUfbrPx_KQ2h8iiuo2ArWg1L0",
+  authDomain: "lrsim-v1.firebaseapp.com",
+  projectId: "lrsim-v1",
+  storageBucket: "lrsim-v1.appspot.com", // Corrigé : ajout ".appspot.com"
+  messagingSenderId: "52166769331",
+  appId: "1:52166769331:web:c403fa2ff51e14ab10cec6"
 };
 
-// Initialize Firebase
+// Initialiser Firebase
 const app = initializeApp(firebaseConfig);
 
-// Export Firebase services for reuse
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
+// Exporter les services Firebase
+export const auth = getAuth(app); // Pour l'authentification
+export const db = getFirestore(app); // Pour Firestore
+export const storage = getStorage(app); // Pour le stockage des fichiers/images
+

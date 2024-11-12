@@ -55,9 +55,6 @@ const Home = () => {
                 </div>
 
                 <div>
-                    <a href="/appartements" onClick={handleAppartementsClick} className="nav-link">
-                        Appartements
-                    </a>
                     <a href="/proprietaires" onClick={handleProprietairesClick} className="nav-link">
                         Propriétaires
                     </a>
