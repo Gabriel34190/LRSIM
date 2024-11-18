@@ -1,43 +1,50 @@
 import React, { useState } from 'react';
-import { db } from './firebase-config';
+import { collection, addDoc } from 'firebase/firestore'; // Import Firestore
+import { db } from './firebase-config'; // Import Firestore config
 import '../css/NewLocationForm.css';
 
 const NewLocationForm = ({ onClose }) => {
     const [locationName, setLocationName] = useState('');
-    const [description, setDescription] = useState('');
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!locationName || !description) {
-            setError('Please fill in all fields');
+        if (!locationName) {
+            setError('Veuillez remplir le champ du nom du lieu');
             return;
         }
 
         try {
-            await db.collection('locations').add({
+            // Ajouter un document dans Firestore
+            await addDoc(collection(db, 'locations'), {
                 name: locationName,
-                description: description,
-                createdAt: new Date()
+                createdAt: new Date(),
             });
-            setSuccessMessage('Location added successfully!');
+
+            setSuccessMessage(`Lieu "${locationName}" ajouté avec succès !`);
             setLocationName('');
-            setDescription('');
             setError('');
-            setTimeout(() => onClose(), 2000);
+
+            // Optionnel : Rediriger vers la page du lieu après ajout
+            // navigate(`/locations/${docRef.id}`);
+            // Fermer le formulaire après succès
+            setTimeout(() => {
+                onClose();
+                window.location.reload();  // Recharge la page
+            }, 2000);
         } catch (err) {
-            console.error('Error adding location:', err);
-            setError('Failed to add location. Please try again.');
+            console.error('Erreur lors de l\'ajout du lieu:', err);
+            setError('Échec de l\'ajout du lieu. Veuillez réessayer.');
         }
     };
 
     return (
         <div className="new-location-form">
-            <h2>Add New Location</h2>
+            <h2>Ajouter un Nouveau Lieu</h2>
             <form onSubmit={handleSubmit}>
                 <label>
-                    Location Name:
+                    Nom du lieu:
                     <input
                         type="text"
                         value={locationName}
@@ -45,18 +52,12 @@ const NewLocationForm = ({ onClose }) => {
                         required
                     />
                 </label>
-                <label>
-                    Description:
-                    <textarea
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        required
-                    ></textarea>
-                </label>
-                <button type="submit">Add Location</button>
+                <button type="submit">Ajouter le lieu</button>
                 {error && <p className="error">{error}</p>}
                 {successMessage && <p className="success">{successMessage}</p>}
-                <button type="button" onClick={onClose} className="close-button">Close</button>
+                <button type="button" onClick={onClose} className="close-button">
+                    Fermer
+                </button>
             </form>
         </div>
     );

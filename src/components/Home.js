@@ -1,26 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { auth } from './firebase-config';
+import { auth, db } from './firebase-config'; // Importation de Firestore
+import { collection, getDocs } from 'firebase/firestore'; // Firestore
 import '../css/Home.css';
-import MontpellierImage from '../images/Montpellier.jpeg';
 import NewLocationForm from './NewLocationForm';
 
 const Home = () => {
     const navigate = useNavigate();
     const [showForm, setShowForm] = useState(false);
     const [user, setUser] = useState(null);
+    const [locations, setLocations] = useState([]); // Stocker les lieux récupérés
 
     useEffect(() => {
+        // Vérifier l'état d'authentification
         const unsubscribe = auth.onAuthStateChanged((currentUser) => {
             setUser(currentUser);
         });
         return () => unsubscribe();
     }, []);
 
-    const handleAppartementsClick = (e) => {
-        e.preventDefault();
-        navigate('/appartements');
-    };
+    useEffect(() => {
+        // Récupérer les lieux depuis Firestore
+        const fetchLocations = async () => {
+            try {
+                const querySnapshot = await getDocs(collection(db, 'locations'));
+                const locationsData = querySnapshot.docs.map((doc) => ({
+                    id: doc.id,
+                    ...doc.data(),
+                }));
+                setLocations(locationsData);
+            } catch (err) {
+                console.error('Erreur lors de la récupération des lieux :', err);
+            }
+        };
+
+        fetchLocations();
+    }, []);
 
     const handleProprietairesClick = (e) => {
         e.preventDefault();
@@ -37,33 +52,53 @@ const Home = () => {
     };
 
     const handleLogout = () => {
-        auth.signOut().then(() => {
-            setUser(null);
-            navigate('/');
-        }).catch((error) => {
-            console.error("Error during logout:", error);
-        });
+        auth.signOut()
+            .then(() => {
+                setUser(null);
+                navigate('/');
+            })
+            .catch((error) => {
+                console.error('Error during logout:', error);
+            });
+    };
+
+    // Gestion du clic sur un lieu
+    const handleLocationClick = (id) => {
+        navigate(`/locations/${id}`); // Rediriger vers la page dynamique du lieu
     };
 
     return (
         <div>
             <div className="navbar">
                 <div className="logo">LesRouchons.com</div>
-                {/* Connection status label */}
-                <div className="status-label">
-                    {user ? "Connected" : "Not Connected"}
-                </div>
+                {/* État de connexion */}
+                <div className="status-label">{user ? 'Connected' : 'Not Connected'}</div>
 
                 <div>
-                    <a href="/proprietaires" onClick={handleProprietairesClick} className="nav-link">
+                    <a
+                        href="/proprietaires"
+                        onClick={handleProprietairesClick}
+                        className="nav-link"
+                    >
                         Propriétaires
                     </a>
                     {user ? (
-                        <a href="/" onClick={(e) => { e.preventDefault(); handleLogout(); }} className="nav-link">
+                        <a
+                            href="/"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                handleLogout();
+                            }}
+                            className="nav-link"
+                        >
                             Déconnexion
                         </a>
                     ) : (
-                        <a href="/connexion" onClick={handleConnexionClick} className="nav-link">
+                        <a
+                            href="/connexion"
+                            onClick={handleConnexionClick}
+                            className="nav-link"
+                        >
                             Connexion
                         </a>
                     )}
@@ -72,22 +107,32 @@ const Home = () => {
 
             <div className="home-container">
                 <h1 className="home-title">Trouvez un logement !</h1>
-                <div className="location-card" onClick={handleAppartementsClick}>
-                    <img src={MontpellierImage} alt="Montpellier" />
-                    <p>Montpellier</p>
+
+                {/* Liste des lieux */}
+                <div className="locations-list">
+                    {locations.map((location) => (
+                        <div
+                            key={location.id}
+                            className="location-card"
+                            onClick={() => handleLocationClick(location.id)}
+                        >
+                            <h2>{location.name}</h2>
+                        </div>
+                    ))}
                 </div>
             </div>
+
             <div className="button-addlocation">
-                 {user && (
+                {user && (
                     <button className="add-location-button" onClick={toggleForm}>
                         Ajouter un nouveau lieu
                     </button>
                 )}
 
-                 {showForm && (
-                <div className="new-location-form">
-                    <NewLocationForm onClose={toggleForm} />
-                </div>
+                {showForm && (
+                    <div className="new-location-form">
+                        <NewLocationForm onClose={toggleForm} />
+                    </div>
                 )}
             </div>
         </div>

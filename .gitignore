@@ -1,3 +1,8 @@
 # Ignorer le dossier node_modules
 node_modules/
+
+# Ignorer le cache des outils de développement
+node_modules/.cache/
+
+# Ignorer les fichiers de build ou générés
 Build/
