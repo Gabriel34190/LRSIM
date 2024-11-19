@@ -18,6 +18,7 @@ const App = () => {
                 <Route path="/proprietaires" element={<Proprietaires />} /> {/* Utilise Proprietaires ici */}
                 <Route path="/connexion" element={<Connexion />} />
                 <Route path="/locations/:id" element={<LocationPage />} /> {/* Route dynamique */}
+
             </Routes>
         </Router>
     );
