@@ -35,7 +35,8 @@ const LocationPage = () => {
 
     return (
         <div>
-            {error && <p className="error">{error}</p>} {/* Affichage de l'erreur */}
+            {error && <p className="error">{error}</p>} 
+            {/* Affichage de l'erreur */}
             {location ? (
                 <>
                     <h1>{location.name}</h1>

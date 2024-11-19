@@ -26,12 +26,9 @@ const NewLocationForm = ({ onClose }) => {
             setLocationName('');
             setError('');
 
-            // Optionnel : Rediriger vers la page du lieu après ajout
-            // navigate(`/locations/${docRef.id}`);
-            // Fermer le formulaire après succès
             setTimeout(() => {
                 onClose();
-                window.location.reload();  // Recharge la page
+                window.location.reload();
             }, 2000);
         } catch (err) {
             console.error('Erreur lors de l\'ajout du lieu:', err);

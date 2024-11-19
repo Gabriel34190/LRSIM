@@ -9,7 +9,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyCPrJBOLulUfbrPx_KQ2h8iiuo2ArWg1L0",
   authDomain: "lrsim-v1.firebaseapp.com",
   projectId: "lrsim-v1",
-  storageBucket: "lrsim-v1.appspot.com", // Corrigé : ajout ".appspot.com"
+  storageBucket: "lrsim-v1.appspot.com",
   messagingSenderId: "52166769331",
   appId: "1:52166769331:web:c403fa2ff51e14ab10cec6"
 };
