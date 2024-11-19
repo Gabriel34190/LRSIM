@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from './firebase-config';  // Corrigez le chemin vers firebase-config
-import { useNavigate } from 'react-router-dom';  // Importer useNavigate
-import '../css/Connexion.css'; // Assurez-vous d'importer votre fichier CSS
+import { auth } from './firebase-config';
+import { useNavigate } from 'react-router-dom';
+import '../css/Connexion.css';
 
 function Connexion() {
   const [email, setEmail] = useState("");
