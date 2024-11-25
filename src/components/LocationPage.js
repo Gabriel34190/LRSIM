@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, /*useNavigate*/ } from 'react-router-dom';
-import { doc, getDoc, /*deleteDoc*/ } from 'firebase/firestore'; // Firestore
+import { useParams } from 'react-router-dom';
+import { doc, getDoc } from 'firebase/firestore'; // Firestore
 import { db } from './firebase-config'; // Votre config Firebase
+import '../css/Home.css'; // Assurez-vous d'avoir les styles
 
 const LocationPage = () => {
     const { id } = useParams(); // Récupère l'ID du lieu depuis l'URL
     const [location, setLocation] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null); // Pour gérer les erreurs
-    // const navigate = useNavigate(); // Utilisé pour rediriger après suppression
 
     useEffect(() => {
         const fetchLocation = async () => {
@@ -32,51 +32,37 @@ const LocationPage = () => {
         fetchLocation();
     }, [id]);
 
-    // Fonction pour gérer la suppression
-    // const handleDelete = async () => {
-    //     const confirmDelete = window.confirm('Êtes-vous sûr de vouloir supprimer ce lieu ?');
-    //     if (confirmDelete) {
-    //         try {
-    //             await deleteDoc(doc(db, 'locations', id));
-    //             alert('Lieu supprimé avec succès.');
-    //             navigate('/'); // Redirige l'utilisateur vers la page d'accueil après suppression
-    //         } catch (err) {
-    //             console.error('Erreur lors de la suppression du lieu :', err);
-    //             alert('Une erreur est survenue lors de la suppression.');
-    //         }
-    //     }
-    // };
-
     if (loading) return <p>Chargement...</p>;
 
     return (
-        <div style={{ position: 'relative' }}>
-            {error && <p className="error">{error}</p>}
-            {location ? (
-                <>
+        <div>
+            {/* Navbar ajoutée ici */}
+            <div className="navbar">
+                <div className="logo">LesRouchons.com</div>
+                <div className="status-label">Not Connected</div>
+                <div>
+                    <a href="/" className="nav-link">Accueil</a>
+                    <a href="/proprietaires" className="nav-link">Propriétaires</a>
+                    <a href="/connexion" className="nav-link">Connexion</a>
+                </div>
+            </div>
 
-
-                    <h1>{location.name}</h1>
-                    <p>
-                        Créé le :{' '}
-                        {location.createdAt?.toDate
-                            ? location.createdAt.toDate().toLocaleDateString()
-                            : 'Date non disponible'}
-                    </p>
-
-                    {/* {location.imageURL ? (
-                        <img
-                            src={location.imageURL}
-                            alt={location.name ? `Vue de ${location.name}` : 'Image du lieu'}
-                            style={{ maxWidth: '100%', height: 'auto', marginTop: '20px' }}
-                        />
-                    ) : (
-                        <p>Aucune image disponible pour ce lieu.</p>
-                    )} */}
-                </>
-            ) : (
-                <p>Lieu introuvable.</p>
-            )}
+            <div style={{ position: 'relative', padding: '20px' }}>
+                {error && <p className="error">{error}</p>}
+                {location ? (
+                    <>
+                        <h1>{location.name}</h1>
+                        <p>
+                            Créé le :{' '}
+                            {location.createdAt?.toDate
+                                ? location.createdAt.toDate().toLocaleDateString()
+                                : 'Date non disponible'}
+                        </p>
+                    </>
+                ) : (
+                    <p>Lieu introuvable.</p>
+                )}
+            </div>
         </div>
     );
 };
