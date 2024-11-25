@@ -1,90 +1,88 @@
 import React, { useState } from 'react';
 import { collection, addDoc } from 'firebase/firestore'; // Firestore
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'; // Firebase Storage
-import { db, storage } from './firebase-config'; // Firebase config
+import { db } from './firebase-config'; // Firebase Firestore
 import '../css/NewLocationForm.css';
 
-const NewLocationForm = ({ onClose }) => {
-    const [locationName, setLocationName] = useState('');
-    const [image, setImage] = useState(null); // Stocker le fichier sélectionné
-    const [error, setError] = useState('');
-    const [successMessage, setSuccessMessage] = useState('');
+const NewLocationForm = ({ onClose, onLocationAdded }) => {
+    const [name, setName] = useState('');
+    const [imageURL, setImageURL] = useState('');
+    const [imagePreview, setImagePreview] = useState(null);
 
-    const handleImageChange = (e) => {
-        if (e.target.files[0]) {
-            setImage(e.target.files[0]); // Stocker le fichier dans l'état
-        }
+    const handleNameChange = (e) => {
+        setName(e.target.value);
+    };
+
+    const handleImageURLChange = (e) => {
+        const url = e.target.value;
+        setImageURL(url);
+        setImagePreview(url); // Met à jour l'aperçu
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!locationName) {
-            setError('Veuillez remplir le champ du nom du lieu');
+
+        if (!name || !imageURL) {
+            alert('Veuillez renseigner le nom du lieu et l\'URL de l\'image.');
             return;
         }
 
         try {
-            let imageURL = '';
-
-            if (image) {
-                // Upload de l'image sur Firebase Storage
-                const imageRef = ref(storage, `locations/${Date.now()}_${image.name}`);
-                const snapshot = await uploadBytes(imageRef, image);
-                imageURL = await getDownloadURL(snapshot.ref); // URL publique de l'image
-            }
-
-            // Ajouter le lieu avec l'URL de l'image dans Firestore
-            await addDoc(collection(db, 'locations'), {
-                name: locationName,
-                imageURL: imageURL || null, // Ajouter l'URL de l'image, ou null si pas d'image
-                createdAt: new Date(),
+            // Ajouter le lieu dans Firestore
+            const docRef = await addDoc(collection(db, 'locations'), {
+                name,
+                imageURL,
             });
 
-            setSuccessMessage(`Lieu "${locationName}" ajouté avec succès !`);
-            setLocationName('');
-            setImage(null); // Réinitialiser l'image
-            setError('');
+            // Appeler le callback pour mettre à jour la liste des lieux
+            onLocationAdded({ id: docRef.id, name, imageURL });
 
-            // Fermer le formulaire après succès
-            setTimeout(() => {
-                onClose();
-                window.location.reload();
-            }, 2000);
+            // Réinitialiser le formulaire
+            setName('');
+            setImageURL('');
+            setImagePreview(null);
+            onClose();
         } catch (err) {
-            console.error('Erreur lors de l\'ajout du lieu:', err);
-            setError('Échec de l\'ajout du lieu. Veuillez réessayer.');
+            console.error('Erreur lors de l\'ajout du lieu :', err);
         }
     };
 
     return (
-        <div className="new-location-form">
-            <h2>Ajouter un Nouveau Lieu</h2>
-            <form onSubmit={handleSubmit}>
-                <label>
-                    Nom du lieu:
-                    <input
-                        type="text"
-                        value={locationName}
-                        onChange={(e) => setLocationName(e.target.value)}
-                        required
-                    />
-                </label>
+        <form className="new-location-form" onSubmit={handleSubmit}>
+            <h2>Ajouter un nouveau lieu</h2>
+            <label htmlFor="name">Nom du lieu :</label>
+            <input
+                type="text"
+                id="name"
+                value={name}
+                onChange={handleNameChange}
+                placeholder="Nom du lieu"
+                required
+            />
 
-                <label>
-                    Ajouter une image:
-                    <input type="file" accept="image/*" onChange={handleImageChange} />
-                </label>
+            <label htmlFor="imageURL">URL de l'image :</label>
+            <input
+                type="text"
+                id="imageURL"
+                value={imageURL}
+                onChange={handleImageURLChange}
+                placeholder="https://example.com/image.jpg"
+                required
+            />
 
-                <button type="submit">Ajouter le lieu</button>
+            {/* Aperçu de l'image */}
+            {imagePreview && (
+                <div className="image-preview">
+                    <img src={imagePreview} alt="Aperçu du lieu" />
+                </div>
+            )}
 
-                {error && <p className="error">{error}</p>}
-                {successMessage && <p className="success">{successMessage}</p>}
-
-                <button type="button" onClick={onClose} className="close-button">
-                    Fermer
-                </button>
-            </form>
-        </div>
+            <button type="submit" className="submit-button">
+                Ajouter
+            </button>
+            <button type="button" className="cancel-button" onClick={onClose}>
+                Annuler
+            </button>
+        </form>
     );
 };
 
