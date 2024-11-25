@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { doc, getDoc, deleteDoc } from 'firebase/firestore'; // Firestore
+import { useParams, /*useNavigate*/ } from 'react-router-dom';
+import { doc, getDoc, /*deleteDoc*/ } from 'firebase/firestore'; // Firestore
 import { db } from './firebase-config'; // Votre config Firebase
 
 const LocationPage = () => {
@@ -8,7 +8,7 @@ const LocationPage = () => {
     const [location, setLocation] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null); // Pour gérer les erreurs
-    const navigate = useNavigate(); // Utilisé pour rediriger après suppression
+    // const navigate = useNavigate(); // Utilisé pour rediriger après suppression
 
     useEffect(() => {
         const fetchLocation = async () => {
@@ -33,19 +33,19 @@ const LocationPage = () => {
     }, [id]);
 
     // Fonction pour gérer la suppression
-    const handleDelete = async () => {
-        const confirmDelete = window.confirm('Êtes-vous sûr de vouloir supprimer ce lieu ?');
-        if (confirmDelete) {
-            try {
-                await deleteDoc(doc(db, 'locations', id));
-                alert('Lieu supprimé avec succès.');
-                navigate('/'); // Redirige l'utilisateur vers la page d'accueil après suppression
-            } catch (err) {
-                console.error('Erreur lors de la suppression du lieu :', err);
-                alert('Une erreur est survenue lors de la suppression.');
-            }
-        }
-    };
+    // const handleDelete = async () => {
+    //     const confirmDelete = window.confirm('Êtes-vous sûr de vouloir supprimer ce lieu ?');
+    //     if (confirmDelete) {
+    //         try {
+    //             await deleteDoc(doc(db, 'locations', id));
+    //             alert('Lieu supprimé avec succès.');
+    //             navigate('/'); // Redirige l'utilisateur vers la page d'accueil après suppression
+    //         } catch (err) {
+    //             console.error('Erreur lors de la suppression du lieu :', err);
+    //             alert('Une erreur est survenue lors de la suppression.');
+    //         }
+    //     }
+    // };
 
     if (loading) return <p>Chargement...</p>;
 
@@ -55,7 +55,7 @@ const LocationPage = () => {
             {location ? (
                 <>
                     {/* Bouton pour supprimer le lieu */}
-                    <button
+                    {/* <button
                         onClick={handleDelete}
                         style={{
                             position: 'absolute',
@@ -73,7 +73,7 @@ const LocationPage = () => {
                         title="Supprimer ce lieu"
                     >
                         ×
-                    </button>
+                    </button> */}
 
                     <h1>{location.name}</h1>
                     <p>
