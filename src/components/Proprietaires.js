@@ -29,6 +29,7 @@ const Proprietaires = () => {
             <div className="navbar">
                 <div className="logo">LesRouchons.com</div>
                 <div>
+                    <a href="/" className="nav-link">Accueil</a> {/* Ajout du lien "Accueil" */}
                     <a href="/proprietaires" className="nav-link">Propriétaires</a>
                     <a href="/connexion" className="nav-link">Connexion</a>
                 </div>
