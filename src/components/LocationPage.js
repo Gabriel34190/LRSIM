@@ -54,26 +54,7 @@ const LocationPage = () => {
             {error && <p className="error">{error}</p>}
             {location ? (
                 <>
-                    {/* Bouton pour supprimer le lieu */}
-                    {/* <button
-                        onClick={handleDelete}
-                        style={{
-                            position: 'absolute',
-                            top: 10,
-                            right: 10,
-                            background: 'red',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '50%',
-                            width: '30px',
-                            height: '30px',
-                            fontSize: '16px',
-                            cursor: 'pointer',
-                        }}
-                        title="Supprimer ce lieu"
-                    >
-                        ×
-                    </button> */}
+
 
                     <h1>{location.name}</h1>
                     <p>
@@ -83,7 +64,7 @@ const LocationPage = () => {
                             : 'Date non disponible'}
                     </p>
 
-                    {location.imageURL ? (
+                    {/* {location.imageURL ? (
                         <img
                             src={location.imageURL}
                             alt={location.name ? `Vue de ${location.name}` : 'Image du lieu'}
@@ -91,7 +72,7 @@ const LocationPage = () => {
                         />
                     ) : (
                         <p>Aucune image disponible pour ce lieu.</p>
-                    )}
+                    )} */}
                 </>
             ) : (
                 <p>Lieu introuvable.</p>

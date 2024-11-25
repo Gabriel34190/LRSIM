@@ -5,28 +5,37 @@ import '../css/NewLocationForm.css';
 
 const NewLocationForm = ({ onClose, onLocationAdded }) => {
     const [name, setName] = useState('');
-    const [imageURL, setImageURL] = useState('');
+    const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
 
     const handleNameChange = (e) => {
         setName(e.target.value);
     };
 
-    const handleImageURLChange = (e) => {
-        const url = e.target.value;
-        setImageURL(url);
-        setImagePreview(url); // Met à jour l'aperçu
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setImageFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result); // Mettre à jour l'aperçu de l'image
+            };
+            reader.readAsDataURL(file);
+        }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!name || !imageURL) {
-            alert('Veuillez renseigner le nom du lieu et l\'URL de l\'image.');
+        if (!name || !imageFile) {
+            alert('Veuillez renseigner le nom du lieu et télécharger l\'image.');
             return;
         }
 
         try {
+            // Créer une URL pour l'image téléchargée en la téléchargeant sur Firebase Storage ou autre
+            const imageURL = URL.createObjectURL(imageFile);
+
             // Ajouter le lieu dans Firestore
             const docRef = await addDoc(collection(db, 'locations'), {
                 name,
@@ -38,7 +47,7 @@ const NewLocationForm = ({ onClose, onLocationAdded }) => {
 
             // Réinitialiser le formulaire
             setName('');
-            setImageURL('');
+            setImageFile(null);
             setImagePreview(null);
             onClose();
         } catch (err) {
@@ -59,13 +68,11 @@ const NewLocationForm = ({ onClose, onLocationAdded }) => {
                 required
             />
 
-            <label htmlFor="imageURL">URL de l'image :</label>
+            <label htmlFor="image">Télécharger une image :</label>
             <input
-                type="text"
-                id="imageURL"
-                value={imageURL}
-                onChange={handleImageURLChange}
-                placeholder="https://example.com/image.jpg"
+                type="file"
+                id="image"
+                onChange={handleImageChange}
                 required
             />
 
