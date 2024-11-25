@@ -66,7 +66,11 @@ const Home = () => {
         navigate(`/locations/${id}`);
     };
 
-    // Fonction pour supprimer un lieu
+    // Ajouter un nouveau lieu dans la liste
+    const handleLocationAdded = (newLocation) => {
+        setLocations((prevLocations) => [newLocation, ...prevLocations]);
+    };
+
     const handleDeleteLocation = async (id) => {
         const confirmation = window.confirm('Êtes-vous sûr de vouloir supprimer ce lieu ?');
         if (confirmation) {
@@ -157,10 +161,9 @@ const Home = () => {
                         Ajouter un nouveau lieu
                     </button>
                 )}
-
                 {showForm && (
                     <div className="new-location-form">
-                        <NewLocationForm onClose={toggleForm} />
+                         <NewLocationForm onClose={toggleForm} onLocationAdded={handleLocationAdded} />
                     </div>
                 )}
             </div>
