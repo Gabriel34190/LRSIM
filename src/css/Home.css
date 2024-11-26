@@ -43,22 +43,29 @@
 }
 
 .location-card img {
-    width: 100%;
-    height: auto;
-    max-width: 100%; /* Permet à l'image de s'adapter à la taille du conteneur */
-    max-height: 20vw;
-    border-radius: var(--border-radius) var(--border-radius) 0 0;
+    width: 500%;
+    height: 520%;
+    object-fit: cover; /* L'image remplit l'espace en respectant le ratio */
+    border-radius: var(--border-radius); /* Bordure arrondie pour l'image aussi */
+    z-index: 0;
 }
+
 
 .location-card p {
     font-size: var(--font-size-card-text);
     font-weight: bold;
     background-color: white;
     margin: 0;
-    padding: 2vw;
+    padding: 1vw;
+    height: 10%; /* Prend les 30% restants du carré */
     border-radius: 0 0 var(--border-radius) var(--border-radius);
     color: var(--text-color);
+    display: flex;
+    align-items: center; /* Centre le texte verticalement */
+    justify-content: center; /* Centre le texte horizontalement */
+    text-align: center;
 }
+
 
 .navbar {
     background-color: var(--navbar-bg);
@@ -114,28 +121,68 @@
     margin-right: auto; /* Centre horizontalement */
 }
 
-
 .delete-button {
     position: absolute;
-    top: 2vw;
-    right: 2vw;
+    top: 1vw; /* Distance relative du haut */
+    right: 1vw; /* Distance relative de la droite */
     background: var(--delete-btn-bg);
     color: white;
     border: none;
     border-radius: 50%;
-    width: 1.5vw;
-    height: 1.5vw;
+    width: 2vw; /* Largeur relative à l'écran */
+    height: 2vw; /* Hauteur relative à l'écran */
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
-    font-size: 1rem;
+    font-size: 1rem; /* Taille de police */
+    transition: transform 0.3s ease;
+}
+
+/* Effet au survol */
+.delete-button:hover {
+    transform: scale(1.1); /* Légèrement plus grand au survol */
+}
+
+/* Media query pour petits écrans */
+@media (max-width: 768px) {
+    .delete-button {
+        width: 4vw; /* Augmente la taille pour les petits écrans */
+        height: 4vw;
+        top: 2vw; /* Ajuste la position */
+        right: 2vw;
+        font-size: 0.8rem; /* Réduit légèrement la police */
+    }
+}
+
+/* Media query pour très petits écrans (mobiles) */
+@media (max-width: 480px) {
+    .delete-button {
+        width: 6vw; /* Bouton encore plus grand sur petits écrans */
+        height: 6vw;
+        top: 3vw;
+        right: 3vw;
+        font-size: 0.7rem; /* Encore plus petite police */
+    }
+}
+
+
+.location-card {
+    width: 80vw; /* 80% de la largeur de l'écran */
+    max-width: 300px; /* Limite maximale à 300px */
+    height: auto; /* Pour garder le ratio */
 }
 
 .location-card {
-    position: relative; /* Nécessaire pour positionner le bouton */
-    padding: 2vw;
-    border: 1px solid #ccc;
-    margin: 2vw;
+    display: inline-block;
+    position: relative;
+    width: 300px; /* Largeur fixe */
+    height: 300px; /* Hauteur égale à la largeur pour un carré */
+    margin: 1vw auto; /* Centrer horizontalement avec auto */
+    cursor: pointer;
     border-radius: var(--border-radius);
+    box-shadow: 0 0.4vw 0.8vw var(--shadow-color);
+    transition: transform 0.3s ease;
+    border: 2px solid #ccc; /* Bordure pour mieux visualiser */
 }
+
