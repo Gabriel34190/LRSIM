@@ -3,52 +3,47 @@ import { collection, addDoc } from 'firebase/firestore'; // Firestore
 import { db } from './firebase-config'; // Firebase Firestore
 import '../css/NewLocationForm.css';
 
+// Importer les images locales depuis src/images
+import Mtp_img from '../images/Montpellier.jpeg';
+import Lyon_img from '../images/Lyon.jpeg';
+import Bcn_img from '../images/Barcelone.jpeg';
+
+// Liste des images locales importées
+const availableImages = [Mtp_img, Lyon_img, Bcn_img];
+
 const NewLocationForm = ({ onClose, onLocationAdded }) => {
     const [name, setName] = useState('');
-    const [imageFile, setImageFile] = useState(null);
-    const [imagePreview, setImagePreview] = useState(null);
+    const [selectedImage, setSelectedImage] = useState(availableImages[0]); // Image par défaut
 
     const handleNameChange = (e) => {
         setName(e.target.value);
     };
 
-    const handleImageChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setImageFile(file);
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImagePreview(reader.result); // Mettre à jour l'aperçu de l'image
-            };
-            reader.readAsDataURL(file);
-        }
+    const handleImageSelect = (image) => {
+        setSelectedImage(image);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!name || !imageFile) {
-            alert('Veuillez renseigner le nom du lieu et télécharger l\'image.');
+        if (!name || !selectedImage) {
+            alert('Veuillez renseigner le nom du lieu et choisir une image.');
             return;
         }
 
         try {
-            // Créer une URL pour l'image téléchargée en la téléchargeant sur Firebase Storage ou autre
-            const imageURL = URL.createObjectURL(imageFile);
-
-            // Ajouter le lieu dans Firestore
+            // Ajouter le lieu dans Firestore avec le nom et l'URL de l'image sélectionnée
             const docRef = await addDoc(collection(db, 'locations'), {
                 name,
-                imageURL,
+                imageURL: selectedImage, // Enregistrez l'URL de l'image choisie
             });
 
             // Appeler le callback pour mettre à jour la liste des lieux
-            onLocationAdded({ id: docRef.id, name, imageURL });
+            onLocationAdded({ id: docRef.id, name, imageURL: selectedImage });
 
             // Réinitialiser le formulaire
             setName('');
-            setImageFile(null);
-            setImagePreview(null);
+            setSelectedImage(availableImages[0]); // Réinitialiser à l'image par défaut
             onClose();
         } catch (err) {
             console.error('Erreur lors de l\'ajout du lieu :', err);
@@ -58,6 +53,8 @@ const NewLocationForm = ({ onClose, onLocationAdded }) => {
     return (
         <form className="new-location-form" onSubmit={handleSubmit}>
             <h2>Ajouter un nouveau lieu</h2>
+            
+            {/* Champ pour le nom du lieu */}
             <label htmlFor="name">Nom du lieu :</label>
             <input
                 type="text"
@@ -68,27 +65,32 @@ const NewLocationForm = ({ onClose, onLocationAdded }) => {
                 required
             />
 
-            <label htmlFor="image">Télécharger une image :</label>
-            <input
-                type="file"
-                id="image"
-                onChange={handleImageChange}
-                required
-            />
+            {/* Sélectionner une image */}
+            <label htmlFor="image">Choisir une image :</label>
+            <div className="image-selection">
+                {availableImages.map((image, index) => (
+                    <div
+                        key={index}
+                        className={`image-option ${selectedImage === image ? 'selected' : ''}`}
+                        onClick={() => handleImageSelect(image)}
+                    >
+                        <img
+                            src={image}
+                            alt={`Option ${index}`}
+                            style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px' }}
+                        />
+                    </div>
+                ))}
+            </div>
 
             {/* Aperçu de l'image */}
-            {imagePreview && (
-                <div className="image-preview">
-                    <img src={imagePreview} alt="Aperçu du lieu" />
-                </div>
-            )}
+            <div className="image-preview">
+                <img src={selectedImage} alt="Aperçu du lieu" style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px' }} />
+            </div>
 
-            <button type="submit" className="submit-button">
-                Ajouter
-            </button>
-            <button type="button" className="cancel-button" onClick={onClose}>
-                Annuler
-            </button>
+            {/* Boutons */}
+            <button type="submit" className="submit-button">Ajouter</button>
+            <button type="button" className="cancel-button" onClick={onClose}>Annuler</button>
         </form>
     );
 };

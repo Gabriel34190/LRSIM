@@ -136,7 +136,7 @@ const Home = () => {
                                 <img
                                     src={location.imageURL}
                                     alt={location.name}
-                                    style={{ width: '100px', height: '100px', objectFit: 'cover' }}
+                                    style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px' }}
                                 />
                             )}
                             {user && (
@@ -163,7 +163,7 @@ const Home = () => {
                 )}
                 {showForm && (
                     <div className="new-location-form">
-                         <NewLocationForm onClose={toggleForm} onLocationAdded={handleLocationAdded} />
+                        <NewLocationForm onClose={toggleForm} onLocationAdded={handleLocationAdded} />
                     </div>
                 )}
             </div>
