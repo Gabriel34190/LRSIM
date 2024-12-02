@@ -125,48 +125,53 @@ const Home = () => {
 
                 {/* Liste des lieux */}
                 <div className="locations-list">
-                    {locations.map((location) => (
-                        <div
-                            key={location.id}
-                            className="location-card"
-                            onClick={() => handleLocationClick(location.id)}
-                        >
-                            <h2>{location.name}</h2>
-                            {location.imageURL && (
-                                <img
-                                    src={location.imageURL}
-                                    alt={location.name}
-                                    style={{ width: '250px', height: '200px', objectFit: 'cover', borderRadius: '8px' }}
-                                />
-                            )}
-                            {user && (
-                                <button
-                                    className="delete-button"
-                                    onClick={(e) => {
-                                        e.stopPropagation(); // Empêche la redirection lors du clic
-                                        handleDeleteLocation(location.id);
-                                    }}
-                                >
-                                    ✖
-                                </button>
-                            )}
-                        </div>
-                    ))}
+                    {locations.length > 0 ? (
+                        locations.map((location) => (
+                            <div
+                                key={location.id}
+                                className="location-card"
+                                onClick={() => handleLocationClick(location.id)}
+                            >
+                                <h2>{location.name}</h2>
+                                {location.imageURL && (
+                                    <img
+                                        src={location.imageURL}
+                                        alt={location.name}
+                                        style={{ width: '250px', height: '200px', objectFit: 'cover', borderRadius: '8px' }}
+                                    />
+                                )}
+                                {user && (  // Affichage du bouton de suppression pour les utilisateurs connectés
+                                    <button
+                                        className="delete-button"
+                                        onClick={(e) => {
+                                            e.stopPropagation(); // Empêche la redirection lors du clic
+                                            handleDeleteLocation(location.id);
+                                        }}
+                                    >
+                                        ✖
+                                    </button>
+                                )}
+                            </div>
+                        ))
+                    ) : (
+                        <p>Aucun lieu disponible pour le moment.</p>
+                    )}
                 </div>
             </div>
 
-            <div className="button-addlocation">
-                {user && (
+            {/* Affichage du bouton pour ajouter un nouveau lieu uniquement si l'utilisateur est connecté */}
+            {user && (
+                <div className="button-addlocation">
                     <button className="add-location-button" onClick={toggleForm}>
                         Ajouter un nouveau lieu
                     </button>
-                )}
-                {showForm && (
-                    <div className="new-location-form">
-                        <NewLocationForm onClose={toggleForm} onLocationAdded={handleLocationAdded} />
-                    </div>
-                )}
-            </div>
+                    {showForm && (
+                        <div className="new-location-form">
+                            <NewLocationForm onClose={toggleForm} onLocationAdded={handleLocationAdded} />
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     );
 };
