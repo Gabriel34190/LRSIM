@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './Home';
 import LocationPage from './LocationPage';
 import Appartements from './Appartements';
-import DetailsAppartement from './DetailsAppartement';
+import DetailsAppartement from './AppartementDetailsPage';
 import Proprietaires from './Proprietaires';  // Assurez-vous que le nom est correct
 import Connexion from './Connexion';
 import '../css/App.css';  // Mise à jour du chemin vers le CSS

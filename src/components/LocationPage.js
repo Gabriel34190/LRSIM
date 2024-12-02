@@ -1,15 +1,31 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { doc, getDoc } from 'firebase/firestore'; // Firestore
-import { db } from './firebase-config'; // Votre config Firebase
+import { useParams, useNavigate } from 'react-router-dom';
+import { doc, collection, getDoc, getDocs, deleteDoc } from 'firebase/firestore'; // Firestore
+import { auth, db } from './firebase-config'; // Votre config Firebase
+import NewAppartementForm from './NewAppartementForm'; // Formulaire d'ajout d'appartement
 import '../css/Home.css'; // Assurez-vous d'avoir les styles
+import '../css/LocationPage.css'; // Ajoutez un fichier CSS pour cette page si nécessaire
 
 const LocationPage = () => {
     const { id } = useParams(); // Récupère l'ID du lieu depuis l'URL
+    const navigate = useNavigate();
+
     const [location, setLocation] = useState(null);
+    const [appartements, setAppartements] = useState([]); // Liste des appartements
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null); // Pour gérer les erreurs
+    const [user, setUser] = useState(null); // Utilisateur connecté
+    const [showForm, setShowForm] = useState(false); // Afficher ou non le formulaire
 
+    // Vérification de l'état d'authentification
+    useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged((currentUser) => {
+            setUser(currentUser);
+        });
+        return () => unsubscribe();
+    }, []);
+
+    // Récupération des données du lieu
     useEffect(() => {
         const fetchLocation = async () => {
             try {
@@ -24,22 +40,65 @@ const LocationPage = () => {
             } catch (err) {
                 console.error('Erreur lors de la récupération du lieu :', err);
                 setError('Une erreur est survenue lors de la récupération du lieu.');
-            } finally {
-                setLoading(false);
             }
         };
 
         fetchLocation();
     }, [id]);
 
+    // Récupération des appartements associés au lieu
+    useEffect(() => {
+        const fetchAppartements = async () => {
+            try {
+                const appartementsRef = collection(db, 'locations', id, 'appartements');
+                const querySnapshot = await getDocs(appartementsRef);
+                const appartementsData = querySnapshot.docs.map((doc) => ({
+                    id: doc.id,
+                    ...doc.data(),
+                }));
+                setAppartements(appartementsData);
+            } catch (err) {
+                console.error('Erreur lors de la récupération des appartements :', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchAppartements();
+    }, [id]);
+
+    // Suppression d'un appartement
+    const handleDeleteAppartement = async (appartementId) => {
+        const confirmation = window.confirm('Êtes-vous sûr de vouloir supprimer cet appartement ?');
+        if (confirmation) {
+            try {
+                const appartementRef = doc(db, 'locations', id, 'appartements', appartementId);
+                await deleteDoc(appartementRef);
+                setAppartements((prev) => prev.filter((a) => a.id !== appartementId));
+            } catch (err) {
+                console.error('Erreur lors de la suppression de l\'appartement :', err);
+            }
+        }
+    };
+
+    // Redirection vers la page de détail de l'appartement
+    const handleAppartementClick = (appartementId) => {
+        navigate(`/appartements/${appartementId}`);
+    };
+
+    // Callback pour ajouter un appartement
+    const handleAppartementAdded = (newAppartement) => {
+        setAppartements((prev) => [...prev, newAppartement]);
+    };
+
     if (loading) return <p>Chargement...</p>;
 
     return (
         <div>
-            {/* Navbar ajoutée ici */}
+            {/* Navbar */}
             <div className="navbar">
                 <div className="logo">LesRouchons.com</div>
-                <div className="status-label">Not Connected</div>
+                <div className="status-label">{user ? 'Connected' : 'Not Connected'}</div>
                 <div>
                     <a href="/" className="nav-link">Accueil</a>
                     <a href="/proprietaires" className="nav-link">Propriétaires</a>
@@ -47,21 +106,63 @@ const LocationPage = () => {
                 </div>
             </div>
 
+            {/* Contenu principal */}
             <div style={{ position: 'relative', padding: '20px' }}>
                 {error && <p className="error">{error}</p>}
                 {location ? (
                     <>
                         <h1>{location.name}</h1>
-                        <p>
-                            Créé le :{' '}
-                            {location.createdAt?.toDate
-                                ? location.createdAt.toDate().toLocaleDateString()
-                                : 'Date non disponible'}
-                        </p>
                     </>
                 ) : (
                     <p>Lieu introuvable.</p>
                 )}
+            </div>
+
+            {/* Ajouter un appartement (formulaire modale) */}
+            {user && (
+                <button className="add-appartement-button" onClick={() => setShowForm(true)}>
+                    Ajouter un appartement
+                </button>
+            )}
+
+            {/* Affichage du formulaire modal */}
+            {showForm && (
+                <NewAppartementForm
+                    locationId={id}
+                    onClose={() => setShowForm(false)}
+                    onAppartementAdded={handleAppartementAdded}
+                />
+            )}
+
+            {/* Liste des appartements */}
+            <div className="appartements-list">
+                {appartements.map((appartement) => (
+                    <div
+                        key={appartement.id}
+                        className="appartement-card"
+                        onClick={() => handleAppartementClick(appartement.id)}
+                    >
+                        <button
+                            className="delete-button"
+                            onClick={(e) => {
+                                e.stopPropagation(); // Empêche la redirection lors du clic
+                                handleDeleteAppartement(appartement.id);
+                            }}
+                        >
+                            ✖
+                        </button>
+                        <h2>{appartement.name}</h2>
+                        {appartement.imageURL && (
+                            <img
+                                src={appartement.imageURL}
+                                alt={appartement.name}
+                                style={{ width: '250px', height: '200px', objectFit: 'cover', borderRadius: '8px' }}
+                            />
+                        )}
+                        <p>{appartement.description}</p>
+                        <p>Prix : {appartement.price} €</p>
+                    </div>
+                ))}
             </div>
         </div>
     );
