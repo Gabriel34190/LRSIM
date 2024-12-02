@@ -53,7 +53,6 @@ const NewLocationForm = ({ onClose, onLocationAdded }) => {
     return (
         <form className="new-location-form" onSubmit={handleSubmit}>
             <h2>Ajouter un nouveau lieu</h2>
-            
             {/* Champ pour le nom du lieu */}
             <label htmlFor="name">Nom du lieu :</label>
             <input
@@ -85,7 +84,7 @@ const NewLocationForm = ({ onClose, onLocationAdded }) => {
 
             {/* Aperçu de l'image */}
             <div className="image-preview">
-                <img src={selectedImage} alt="Aperçu du lieu" style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px' }} />
+                <img src={selectedImage} alt="Aperçu du lieu" style={{ width: '200px', height: '200px', objectFit: 'cover', borderRadius: '8px' }} />
             </div>
 
             {/* Boutons */}

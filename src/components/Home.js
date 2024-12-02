@@ -136,7 +136,7 @@ const Home = () => {
                                 <img
                                     src={location.imageURL}
                                     alt={location.name}
-                                    style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px' }}
+                                    style={{ width: '250px', height: '200px', objectFit: 'cover', borderRadius: '8px' }}
                                 />
                             )}
                             {user && (
