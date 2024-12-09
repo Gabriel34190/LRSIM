@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { doc, collection, getDoc, getDocs, deleteDoc } from 'firebase/firestore'; // Firestore
-import { auth, db } from './firebase-config'; // Votre config Firebase
-import NewAppartementForm from './NewAppartementForm'; // Formulaire d'ajout d'appartement
-import '../css/Home.css'; // Assurez-vous d'avoir les styles
-import '../css/LocationPage.css'; // Ajoutez un fichier CSS pour cette page si nécessaire
+import { doc, collection, getDoc, getDocs, deleteDoc } from 'firebase/firestore';
+import { auth, db } from './firebase-config';
+import NewAppartementForm from './NewAppartementForm';
+import '../css/Home.css';
+import '../css/LocationPage.css';
 
 const LocationPage = () => {
     const { id } = useParams(); // Récupère l'ID du lieu depuis l'URL

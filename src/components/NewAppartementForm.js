@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { collection, addDoc } from 'firebase/firestore';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { db, storage } from './firebase-config';
+import { db } from './firebase-config';
 
 const NewAppartementForm = ({ locationId, onClose, onAppartementAdded }) => {
     const [name, setName] = useState('');
@@ -11,6 +10,7 @@ const NewAppartementForm = ({ locationId, onClose, onAppartementAdded }) => {
     const [image, setImage] = useState(null);
     const [error, setError] = useState('');
     const [uploading, setUploading] = useState(false);
+
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
@@ -23,43 +23,53 @@ const NewAppartementForm = ({ locationId, onClose, onAppartementAdded }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Validation simple des données
-        if (!name || !price || !description) {
-            setError("Tous les champs sont obligatoires.");
+        if (!name || !price || !description || !image) {
+            setError('Tous les champs sont obligatoires.');
             return;
         }
 
-        if (isNaN(price) || parseFloat(price) <= 0) {
-            setError("Le prix doit être un nombre positif.");
-            return;
-        }
-
-        let imageURL = '';
         try {
-            if (image) {
-                setUploading(true);
-                console.log('Début de l\'upload de l\'image...');
-                const storageRef = ref(storage, `appartements/${Date.now()}_${image.name}`);
-                const uploadTask = await uploadBytesResumable(storageRef, image);
-                console.log('Upload terminé.');
-                imageURL = await getDownloadURL(uploadTask.ref);
-                console.log('Image URL récupérée :', imageURL);
-            }
+            setUploading(true);
 
-            console.log('Début de la sauvegarde dans Firestore...');
+            // Appel à Cloudinary
+            const imageURL = await uploadImageToCloudinary(image);
+
+            // Enregistrement dans Firestore
             await saveAppartement(imageURL);
-            console.log('Processus terminé avec succès.');
         } catch (err) {
-            console.error('Erreur lors du traitement :', err);
-            setError('Une erreur est survenue.');
+            setError("Une erreur s'est produite lors de l'ajout de l'appartement.");
         } finally {
             setUploading(false);
         }
     };
 
+    const uploadImageToCloudinary = async (file) => {
+        const cloudinaryURL = `https://api.cloudinary.com/v1_1/${process.env.REACT_APP_CLOUDINARY_NAME}/image/upload`;
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET);
+
+        try {
+            const response = await fetch(cloudinaryURL, {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response.ok) {
+                throw new Error('Échec de l’upload sur Cloudinary');
+            }
+
+            const data = await response.json();
+            return data.secure_url; // L'URL sécurisée de l'image
+        } catch (err) {
+            console.error('Erreur lors de l’upload Cloudinary:', err);
+            throw err;
+        }
+    };
+
     const saveAppartement = async (imageURL = '') => {
         try {
-            console.log('Début de la sauvegarde dans Firestore...');
             const newAppartement = {
                 name,
                 price: parseFloat(price),
@@ -146,7 +156,9 @@ const NewAppartementForm = ({ locationId, onClose, onAppartementAdded }) => {
             <button type="submit" disabled={uploading}>
                 {uploading ? 'Enregistrement en cours...' : 'Ajouter'}
             </button>
-            <button type="button" onClick={onClose}>Annuler</button>
+            <button
+                type="button" onClick={onClose}>Annuler
+            </button>
         </form>
     );
 };
