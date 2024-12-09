@@ -156,7 +156,13 @@ const LocationPage = () => {
                             <img
                                 src={appartement.imageURL}
                                 alt={appartement.name}
-                                style={{ width: '250px', height: '200px', objectFit: 'cover', borderRadius: '8px' }}
+                                style={{
+                                    width: '100%',         // Largeur adaptative
+                                    maxWidth: '250px',     // Largeur maximale si nécessaire
+                                    height: 'auto',        // Hauteur ajustée proportionnellement
+                                    objectFit: 'cover',
+                                    borderRadius: '8px'
+                                }}
                             />
                         )}
                         <p>{appartement.description}</p>
