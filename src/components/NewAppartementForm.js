@@ -6,6 +6,7 @@ import { db, storage } from './firebase-config';
 const NewAppartementForm = ({ locationId, onClose, onAppartementAdded }) => {
     const [name, setName] = useState('');
     const [price, setPrice] = useState('');
+    const [Adress, setAdress] = useState('');
     const [description, setDescription] = useState('');
     const [image, setImage] = useState(null);
     const [error, setError] = useState('');
@@ -14,6 +15,7 @@ const NewAppartementForm = ({ locationId, onClose, onAppartementAdded }) => {
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
+            console.log('Image sélectionnée :', file.name);
             setImage(file);
         }
     };
@@ -33,79 +35,66 @@ const NewAppartementForm = ({ locationId, onClose, onAppartementAdded }) => {
         }
 
         let imageURL = '';
-        if (image) {
-            // Si une image est sélectionnée, on la télécharge dans Firebase Storage
-            try {
+        try {
+            if (image) {
                 setUploading(true);
+                console.log('Début de l\'upload de l\'image...');
                 const storageRef = ref(storage, `appartements/${Date.now()}_${image.name}`);
-                const uploadTask = uploadBytesResumable(storageRef, image);
-
-                // Suivi de la progression du téléchargement
-                uploadTask.on(
-                    'state_changed',
-                    (snapshot) => {
-                        // Vous pouvez ici afficher la progression de l'upload
-                    },
-                    (error) => {
-                        setError('Erreur lors du téléchargement de l\'image');
-                        setUploading(false);
-                    },
-                    async () => {
-                        // Une fois l'image téléchargée, on récupère l'URL
-                        imageURL = await getDownloadURL(uploadTask.snapshot.ref);
-                        saveAppartement(imageURL);
-                    }
-                );
-            } catch (err) {
-                console.error('Erreur lors du téléchargement de l\'image :', err);
-                setError('Une erreur s\'est produite lors du téléchargement de l\'image.');
-                setUploading(false);
+                const uploadTask = await uploadBytesResumable(storageRef, image);
+                console.log('Upload terminé.');
+                imageURL = await getDownloadURL(uploadTask.ref);
+                console.log('Image URL récupérée :', imageURL);
             }
-        } else {
-            // Si pas d'image, on appelle la fonction de sauvegarde directement
-            saveAppartement();
+
+            console.log('Début de la sauvegarde dans Firestore...');
+            await saveAppartement(imageURL);
+            console.log('Processus terminé avec succès.');
+        } catch (err) {
+            console.error('Erreur lors du traitement :', err);
+            setError('Une erreur est survenue.');
+        } finally {
+            setUploading(false);
         }
     };
 
     const saveAppartement = async (imageURL = '') => {
         try {
-            // Création de l'objet à envoyer dans Firestore
+            console.log('Début de la sauvegarde dans Firestore...');
             const newAppartement = {
                 name,
-                price: parseFloat(price), // On convertit en nombre
+                price: parseFloat(price),
                 description,
-                locationId, // L'ID de la localisation
-                imageURL
+                locationId,
+                imageURL,
             };
 
-            // Ajout de l'appartement dans Firestore
             const docRef = await addDoc(collection(db, 'appartements'), newAppartement);
-            
+            console.log('Appartement sauvegardé avec succès, ID:', docRef.id);
+
             // Appel du callback pour rafraîchir la liste des appartements
             onAppartementAdded({ id: docRef.id, ...newAppartement });
 
             // Réinitialiser le formulaire et fermer
             setName('');
+            setAdress('');
             setPrice('');
             setDescription('');
             setImage(null);
             setError('');
             onClose();
         } catch (err) {
-            console.error('Erreur lors de l\'ajout de l\'appartement :', err);
+            console.error('Erreur lors de la sauvegarde Firestore :', err);
             setError("Une erreur s'est produite lors de l'ajout de l'appartement.");
-        } finally {
-            setUploading(false);
         }
     };
 
     return (
         <form onSubmit={handleSubmit} className="new-appartement-form">
             <h3>Créer un nouvel appartement</h3>
-            
+
             {/* Affichage des erreurs */}
             {error && <p className="error">{error}</p>}
-            
+
             <div>
                 <label>Titre</label>
                 <input
@@ -117,7 +106,18 @@ const NewAppartementForm = ({ locationId, onClose, onAppartementAdded }) => {
                 />
             </div>
             <div>
-                <label>Prix (€)</label>
+                <label>Adresse</label>
+                <input
+                    type="text"
+                    value={Adress}
+                    onChange={(e) => setAdress(e.target.value)}
+                    placeholder="Ex: 33 rue des mimosas"
+                    required
+                />
+
+            </div>
+            <div>
+                <label>Prix/Mois (€)</label>
                 <input
                     type="number"
                     value={price}
