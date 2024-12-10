@@ -83,7 +83,7 @@ const LocationPage = () => {
 
     // Redirection vers la page de détail de l'appartement
     const handleAppartementClick = (appartementId) => {
-        navigate(`/appartements/${appartementId}`);
+        navigate(`/details-appartement/${appartementId}`);
     };
 
     // Callback pour ajouter un appartement

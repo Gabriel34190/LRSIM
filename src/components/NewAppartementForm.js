@@ -94,8 +94,6 @@ const NewAppartementForm = ({ locationId, onClose, onAppartementAdded }) => {
             setError("Une erreur s'est produite lors de l'ajout de l'appartement.");
         }
     };
-    
-
     return (
         <form onSubmit={handleSubmit} className="new-appartement-form">
             <h3>Créer un nouvel appartement</h3>
