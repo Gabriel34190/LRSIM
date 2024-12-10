@@ -1,0 +1,25 @@
+.appartement-details {
+    max-width: 80%; /* Limite la largeur à 80% de l'écran */
+    margin: 0 auto; /* Centre horizontalement */
+    text-align: center; /* Centre le texte */
+    background: #f9f9f9;
+    border-radius: var(--border-radius);
+    padding: 3vw;
+    box-shadow: 0 2vw 3vw var(--shadow-color);
+}
+
+.appartement-details h1 {
+    font-size: 2rem;
+    margin-bottom: 1vw;
+}
+
+.appartement-details p {
+    font-size: 1.2rem;
+    color: var(--text-color);
+}
+
+.appartement-details img {
+    display: block;
+    margin: 0 auto 2vw;
+    border-radius: var(--border-radius);
+}
