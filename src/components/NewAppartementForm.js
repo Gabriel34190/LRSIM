@@ -75,16 +75,13 @@ const NewAppartementForm = ({ locationId, onClose, onAppartementAdded }) => {
                 price: parseFloat(price),
                 description,
                 locationId,
+                Adress,
                 imageURL,
             };
-
-            const docRef = await addDoc(collection(db, 'appartements'), newAppartement);
+            const docRef = await addDoc(collection(db, 'locations', locationId, 'appartements'), newAppartement);
             console.log('Appartement sauvegardé avec succès, ID:', docRef.id);
-
-            // Appel du callback pour rafraîchir la liste des appartements
             onAppartementAdded({ id: docRef.id, ...newAppartement });
-
-            // Réinitialiser le formulaire et fermer
+            // Réinitialisation du formulaire et fermeture
             setName('');
             setAdress('');
             setPrice('');
@@ -97,6 +94,7 @@ const NewAppartementForm = ({ locationId, onClose, onAppartementAdded }) => {
             setError("Une erreur s'est produite lors de l'ajout de l'appartement.");
         }
     };
+    
 
     return (
         <form onSubmit={handleSubmit} className="new-appartement-form">
