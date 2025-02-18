@@ -4,6 +4,7 @@ import { auth, db } from './firebase-config'; // Importation de Firestore
 import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore'; // Firestore
 import '../css/Home.css';
 import NewLocationForm from './NewLocationForm';
+import logo from '../images/LRSIM.png'
 
 const Home = () => {
     const navigate = useNavigate();
@@ -86,7 +87,10 @@ const Home = () => {
     return (
         <div>
             <div className="navbar">
-                <div className="logo">LesRouchons.com</div>
+            <div className="logo">
+                <img src={logo} alt="Logo" style={{ width: '4vw', height: '4hw', borderRadius: '56%'}} />
+            </div>
+
                 <div className="status-label">{user ? 'Connected' : 'Not Connected'}</div>
 
                 <div>

@@ -27,7 +27,7 @@ const Proprietaires = () => {
     return (
         <div>
             <div className="navbar">
-                <div className="logo">LesRouchons.com</div>
+                <div className="logo">LRSIM</div>
                 <div>
                     <a href="/" className="nav-link">Accueil</a> {/* Ajout du lien "Accueil" */}
                     <a href="/proprietaires" className="nav-link">Propriétaires</a>
@@ -40,8 +40,6 @@ const Proprietaires = () => {
                 <div className="home-container">
                     <h1 className="home-title">Un problème ? Contactez votre propriétaire !</h1>
                     <div className="location-card" onClick={() => handleOwnerClick('Sandra')}>
-                        <img src={MontpellierImage} alt="Sandra" />
-                        <p>Sandra Rouchon</p>
                     </div>
                     <div className="location-card" onClick={() => handleOwnerClick('Alain')}>
                         <img src={MontpellierImage} alt="Alain" />
