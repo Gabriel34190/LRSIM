@@ -83,8 +83,9 @@ const LocationPage = () => {
 
     // Redirection vers la page de détail de l'appartement
     const handleAppartementClick = (appartementId) => {
-        navigate(`/details-appartement/${appartementId}`);
+        navigate(`/details-appartement/${id}/${appartementId}`);
     };
+    
 
     // Callback pour ajouter un appartement
     const handleAppartementAdded = (newAppartement) => {
@@ -97,7 +98,9 @@ const LocationPage = () => {
         <div>
             {/* Navbar */}
             <div className="navbar">
-                <div className="logo">LesRouchons.com</div>
+                <div className="logo">
+                    <img src="/public/LRSIM.png" alt="Logo" />
+                </div>
                 <div className="status-label">{user ? 'Connected' : 'Not Connected'}</div>
                 <div>
                     <a href="/" className="nav-link">Accueil</a>

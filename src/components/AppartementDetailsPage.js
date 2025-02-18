@@ -6,11 +6,11 @@ import '../css/Home.css';
 import '../css/LocationPage.css';
 
 const AppartementDetailsPage = () => {
-    const { appartementId } = useParams(); // Récupère l'ID de l'appartement depuis l'URL
-    const [appartement, setAppartement] = useState(null); // Détails de l'appartement
+    const { locationId, appartementId } = useParams(); // Récupération des IDs
+    const [appartement, setAppartement] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null); // Gestion des erreurs
-    const [user, setUser] = useState(null); // Utilisateur connecté
+    const [error, setError] = useState(null);
+    const [user, setUser] = useState(null);
 
     // Vérification de l'état d'authentification
     useEffect(() => {
@@ -20,11 +20,11 @@ const AppartementDetailsPage = () => {
         return () => unsubscribe();
     }, []);
 
-    // Récupération des données de l'appartement
+    // Récupération des détails de l'appartement
     useEffect(() => {
         const fetchAppartement = async () => {
             try {
-                const docRef = doc(db, 'appartements', appartementId);
+                const docRef = doc(db, 'locations', locationId, 'appartements', appartementId);
                 const docSnap = await getDoc(docRef);
 
                 if (docSnap.exists()) {
@@ -41,13 +41,12 @@ const AppartementDetailsPage = () => {
         };
 
         fetchAppartement();
-    }, [appartementId]);
+    }, [locationId, appartementId]);
 
     if (loading) return <p>Chargement...</p>;
 
     return (
         <div>
-            {/* Navbar */}
             <div className="navbar">
                 <div className="logo">LesRouchons.com</div>
                 <div className="status-label">{user ? 'Connected' : 'Not Connected'}</div>
@@ -58,7 +57,6 @@ const AppartementDetailsPage = () => {
                 </div>
             </div>
 
-            {/* Contenu principal */}
             <div style={{ padding: '2vw' }}>
                 {error && <p className="error">{error}</p>}
                 {appartement ? (
@@ -70,7 +68,7 @@ const AppartementDetailsPage = () => {
                                 alt={appartement.name}
                                 style={{
                                     width: '100%',
-                                    maxWidth: '50vw', // Limité à la moitié de l'écran
+                                    maxWidth: '50vw',
                                     height: 'auto',
                                     objectFit: 'cover',
                                     borderRadius: '1vw',

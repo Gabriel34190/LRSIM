@@ -12,7 +12,7 @@ const App = () => {
         <Router>
             <Routes>
                 <Route path="/" element={<Home />} />
-                <Route path="/details-appartement/:appartementId" element={<AppartementDetailsPage />} />
+                <Route path="/details-appartement/:locationId/:appartementId" element={<AppartementDetailsPage />} />
                 <Route path="/proprietaires" element={<Proprietaires />} />
                 <Route path="/connexion" element={<Connexion />} />
                 <Route path="/locations/:id" element={<LocationPage />} /> {/* Route dynamique */}
