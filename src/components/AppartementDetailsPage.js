@@ -65,7 +65,7 @@ const AppartementDetailsPage = () => {
                         {appartement.imageURL && (
                             <img
                                 src={appartement.imageURL}
-                                alt={appartement.name}
+                                alt= {appartement.name}
                                 style={{
                                     width: '100%',
                                     maxWidth: '50vw',
@@ -81,6 +81,9 @@ const AppartementDetailsPage = () => {
                         </p>
                         <p style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
                             Prix : {appartement.price} €
+                        </p>
+                        <p style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
+                            Adress : {appartement.Adress} .
                         </p>
                     </div>
                 ) : (
