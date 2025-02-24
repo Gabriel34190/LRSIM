@@ -5,6 +5,7 @@ import { auth, db } from './firebase-config';
 import NewAppartementForm from './NewAppartementForm';
 import '../css/Home.css';
 import '../css/LocationPage.css';
+import logo from '../images/LRSIM.png';
 
 const LocationPage = () => {
     const { id } = useParams(); // Récupère l'ID du lieu depuis l'URL
@@ -85,7 +86,6 @@ const LocationPage = () => {
     const handleAppartementClick = (appartementId) => {
         navigate(`/details-appartement/${id}/${appartementId}`);
     };
-    
 
     // Callback pour ajouter un appartement
     const handleAppartementAdded = (newAppartement) => {
@@ -99,7 +99,7 @@ const LocationPage = () => {
             {/* Navbar */}
             <div className="navbar">
                 <div className="logo">
-                    <img src="/public/LRSIM.png" alt="Logo" />
+                    <img src={logo} alt="Logo" style={{ width: '4vw', height: '4vw', borderRadius: '50%' }} />
                 </div>
                 <div className="status-label">{user ? 'Connected' : 'Not Connected'}</div>
                 <div>
@@ -145,26 +145,29 @@ const LocationPage = () => {
                         className="appartement-card"
                         onClick={() => handleAppartementClick(appartement.id)}
                     >
-                        <button
-                            className="delete-button"
-                            onClick={(e) => {
-                                e.stopPropagation(); // Empêche la redirection lors du clic
-                                handleDeleteAppartement(appartement.id);
-                            }}
-                        >
-                            ✖
-                        </button>
+                        {/* Bouton de suppression affiché seulement si l'utilisateur est connecté */}
+                        {user && (
+                            <button
+                                className="delete-button"
+                                onClick={(e) => {
+                                    e.stopPropagation(); // Empêche la redirection lors du clic
+                                    handleDeleteAppartement(appartement.id);
+                                }}
+                            >
+                                ✖
+                            </button>
+                        )}
                         <h2>{appartement.name}</h2>
                         {appartement.imageURL && (
                             <img
-                                src={appartement.imageURL}
-                                alt={appartement.name}
-                                style={{
-                                    width: '100%',         // Largeur adaptative
-                                    maxWidth: '250px',     // Largeur maximale si nécessaire
-                                    height: 'auto',        // Hauteur ajustée proportionnellement
-                                    objectFit: 'cover',
-                                    borderRadius: '8px'
+                            src={appartement.imageURL}
+                            alt={appartement.name}
+                            style={{
+                                width: '100%',         // Largeur adaptative
+                                maxWidth: '20vw',      // Largeur maximale en fonction de la largeur de l'écran
+                                height: 'auto',        // Hauteur proportionnelle
+                                objectFit: 'cover',
+                                borderRadius: '1vw'    // Coins arrondis proportionnels à la largeur de l'écran
                                 }}
                             />
                         )}
