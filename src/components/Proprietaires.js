@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import '../css/Proprietaires.css'; // Chemin vers le CSS
-import MontpellierImage from '../images/Montpellier.jpeg'; // Assurez-vous que le chemin est correct
+import PhotoSandra from '../images/pion_gaby.jpg'; // Assurez-vous que le chemin est correct
+import logo from '../images/LRSIM.png'
+
 
 const Proprietaires = () => {
     const [selectedOwner, setSelectedOwner] = useState(null); // État pour le propriétaire sélectionné
@@ -27,7 +29,9 @@ const Proprietaires = () => {
     return (
         <div>
             <div className="navbar">
-                <div className="logo">LRSIM</div>
+            <div className="logo">
+                <img src={logo} alt="Logo" style={{ width: '4vw', height: '4hw', borderRadius: '56%'}} />
+            </div>
                 <div>
                     <a href="/" className="nav-link">Accueil</a> {/* Ajout du lien "Accueil" */}
                     <a href="/proprietaires" className="nav-link">Propriétaires</a>
@@ -40,10 +44,8 @@ const Proprietaires = () => {
                 <div className="home-container">
                     <h1 className="home-title">Un problème ? Contactez votre propriétaire !</h1>
                     <div className="location-card" onClick={() => handleOwnerClick('Sandra')}>
-                    </div>
-                    <div className="location-card" onClick={() => handleOwnerClick('Alain')}>
-                        <img src={MontpellierImage} alt="Alain" />
-                        <p>Alain Rouchon</p>
+                        <img src={PhotoSandra} alt="Sandra" />
+                        <p>Sandra Rouchon</p>
                     </div>
                 </div>
 
@@ -55,29 +57,12 @@ const Proprietaires = () => {
                         {selectedOwner === 'Sandra' && (
                             <>
                                 <p><strong>Nom Complet :</strong> Sandra Rouchon</p>
-                                <p><strong>Numéro de Téléphone :</strong> 0123 456 789</p>
-                                <p><strong>Adresse Email :</strong> sandra@example.com</p>
-                                <p><strong>Adresse Postale :</strong> 123 Rue de Montpellier, 34000 Montpellier</p>
+                                <p><strong>Numéro de Téléphone :</strong>06 80 59 06 37</p>
+                                <p><strong>Adresse Email :</strong> sandra</p>
+                                <p><strong>Adresse Postale :</strong> 1040 Avenue de L'Europe, Laroque 34190</p>
                                 <p><strong>Disponibilité :</strong> Lundi - Vendredi, 9h - 18h</p>
                                 <p><strong>Préférences de Contact :</strong> Email de préférence</p>
-                                <p><strong>Détails du Contrat de Location :</strong> Bail jusqu'à 2025</p>
-                                <p><strong>Services d'Urgence :</strong> Plombier: 0123 456 790</p>
-                                <p><strong>Historique de Réparations :</strong> Réparation de fuite en 2023</p>
                                 <p><strong>Remarques Spéciales :</strong> Très réactif aux demandes.</p>
-                            </>
-                        )}
-                        {selectedOwner === 'Alain' && (
-                            <>
-                                <p><strong>Nom Complet :</strong> Alain Rouchon</p>
-                                <p><strong>Numéro de Téléphone :</strong> 0987 654 321</p>
-                                <p><strong>Adresse Email :</strong> alain@example.com</p>
-                                <p><strong>Adresse Postale :</strong> 456 Avenue des Écoles, 34000 Montpellier</p>
-                                <p><strong>Disponibilité :</strong> Mardi - Samedi, 10h - 17h</p>
-                                <p><strong>Préférences de Contact :</strong> Téléphone de préférence</p>
-                                <p><strong>Détails du Contrat de Location :</strong> Bail jusqu'à 2024</p>
-                                <p><strong>Services d'Urgence :</strong> Électricien: 0987 654 322</p>
-                                <p><strong>Historique de Réparations :</strong> Réparation du chauffage en 2022</p>
-                                <p><strong>Remarques Spéciales :</strong> Disponible pour des visites le week-end.</p>
                             </>
                         )}
                     </div>

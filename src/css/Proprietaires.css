@@ -1,45 +1,76 @@
-/* Proprietaires.css */
+/* Définition des variables */
+:root {
+    --blur-intensity: 8px; /* Intensité du flou */
+    --dropdown-width: 30vw; /* Largeur du menu en pourcentage */
+    --dropdown-padding: 2vw; /* Padding adaptatif */
+    --dropdown-radius: 1vw; /* Arrondi des bordures */
+    --font-size-title: 2vw; /* Taille du titre */
+    --font-size-text: 1.2vw; /* Taille du texte */
+    --image-size: 100%; /* Taille dynamique de l'image */
+}
+
+/* Effet de flou */
 .content-container {
-    transition: filter 0.3s; /* Transition pour le flou */
+    transition: filter 0.3s;
 }
 
-.content-container.flipped {
-    filter: blur(5px); /* Applique un flou au contenu */
-}
-
+.content-container.flipped,
 body-blurred .content-container {
-    filter: blur(5px); /* Applique le flou au contenu */
+    filter: blur(var(--blur-intensity));
 }
 
+/* Menu déroulant */
 .dropdown-menu {
     position: fixed;
-    top: 70px; /* Juste en dessous de la barre de navigation */
+    top: 70px;
     left: 0;
-    width: 300px; /* Largeur du menu */
+    width: var(--dropdown-width);
     background-color: white;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    z-index: 1000; /* S'assurer que le menu soit au-dessus des autres éléments */
-    padding: 20px;
-    border-radius: 8px;
-    text-align: left; /* Alignement du texte à gauche */
-    resize: horizontal; /* Permettre le redimensionnement horizontal */
-    overflow: auto; /* Permet de faire défiler le contenu si nécessaire */
+    z-index: 1000;
+    padding: var(--dropdown-padding);
+    border-radius: var(--dropdown-radius);
+    text-align: left;
+    resize: horizontal;
+    overflow: auto;
 }
 
 .close-button {
     background: none;
     border: none;
-    font-size: 18px;
+    font-size: 1.5vw;
     cursor: pointer;
-    float: right; /* Aligner le bouton de fermeture à droite */
+    float: right;
 }
 
 .dropdown-menu h2 {
-    font-size: 1.5em; /* Taille du titre dans le menu */
-    margin-bottom: 10px;
+    font-size: var(--font-size-title);
+    margin-bottom: 1vw;
 }
 
 .dropdown-menu p {
-    font-size: 1.1em; /* Taille du texte dans le menu */
-    margin: 5px 0; /* Espacement vertical entre les paragraphes */
+    font-size: var(--font-size-text);
+    margin: 0.5vw 0;
+}
+
+/* Carte de localisation */
+.location-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    width: fit-content;
+}
+
+.location-card img {
+    width: var(--image-size);
+    height: auto;
+    max-width: 100%; /* Assure que l'image ne dépasse pas la taille originale */
+    border-radius: 1vw; /* Arrondi des bords de l'image */
+}
+
+.location-card p {
+    margin-top: 0.5vw;
+    font-size: var(--font-size-text);
+    text-align: center;
 }

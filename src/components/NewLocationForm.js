@@ -76,7 +76,14 @@ const NewLocationForm = ({ onClose, onLocationAdded }) => {
                         <img
                             src={image}
                             alt={`Option ${index}`}
-                            style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px' }}
+                            style={{
+                                width: '10vw',
+                                height: '10vw',
+                                maxWidth: '120px', // Limite max
+                                maxHeight: '120px',
+                                objectFit: 'cover',
+                                borderRadius: '0.5vw',
+                            }}
                         />
                     </div>
                 ))}
@@ -84,7 +91,18 @@ const NewLocationForm = ({ onClose, onLocationAdded }) => {
 
             {/* Aperçu de l'image */}
             <div className="image-preview">
-                <img src={selectedImage} alt="Aperçu du lieu" style={{ width: '200px', height: '200px', objectFit: 'cover', borderRadius: '8px' }} />
+                <img
+                    src={selectedImage}
+                    alt="Aperçu du lieu"
+                    style={{
+                        width: '20vw',
+                        height: '20vw',
+                        maxWidth: '200px',
+                        maxHeight: '200px',
+                        objectFit: 'cover',
+                        borderRadius: '0.5vw'
+                    }}
+                />
             </div>
 
             {/* Boutons */}

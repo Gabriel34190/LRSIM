@@ -4,6 +4,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from './firebase-config';
 import '../css/Home.css';
 import '../css/LocationPage.css';
+import logo from '../images/LRSIM.png'
 
 const AppartementDetailsPage = () => {
     const { locationId, appartementId } = useParams(); // Récupération des IDs
@@ -48,7 +49,9 @@ const AppartementDetailsPage = () => {
     return (
         <div>
             <div className="navbar">
-                <div className="logo">LesRouchons.com</div>
+            <div className="logo">
+                <img src={logo} alt="Logo" style={{ width: '4vw', height: '4hw', borderRadius: '56%'}} />
+            </div>
                 <div className="status-label">{user ? 'Connected' : 'Not Connected'}</div>
                 <div>
                     <a href="/" className="nav-link">Accueil</a>
