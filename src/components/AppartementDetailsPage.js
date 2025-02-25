@@ -64,18 +64,20 @@ const AppartementDetailsPage = () => {
                 {error && <p className="error">{error}</p>}
                 {appartement ? (
                     <div className="appartement-details">
-                        <h1>{appartement.name}</h1>
+                        <h1 style={{ textAlign: 'center' }}>{appartement.name}</h1>
                         {appartement.imageURL && (
                             <img
                                 src={appartement.imageURL}
                                 alt= {appartement.name}
                                 style={{
-                                    width: '100%',
-                                    maxWidth: '50vw',
+                                    width: '45%',
+                                    maxWidth: '20vw',
                                     height: 'auto',
                                     objectFit: 'cover',
                                     borderRadius: '1vw',
-                                    marginBottom: '2vh'
+                                    marginBottom: '2vh',
+                                    marginLeft: '79vh',
+                                    justifyContent: 'center',
                                 }}
                             />
                         )}
