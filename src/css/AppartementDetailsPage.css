@@ -23,3 +23,36 @@
     margin: 0 auto 2vw;
     border-radius: var(--border-radius);
 }
+.carousel {
+    width: 40vw;
+    max-width: 60vw;
+    margin: 0 auto;
+}
+
+.carousel-image {
+    width: 100%;
+    height: auto;
+    border-radius: 1vh;
+    box-shadow: 0 0.5vh 0.8vh rgba(0, 0, 0, 0.1);
+}
+
+.upload-container {
+    text-align: center;
+    margin-top: 2vh;
+}
+
+.upload-label {
+    display: block;
+    padding: 1.5vh 2vw;
+    background-color: #007bff;
+    color: white;
+    border-radius: 1vh;
+    cursor: pointer;
+    width: fit-content;
+    font-size: 2vh;
+    margin: 0 auto;
+}
+
+.upload-input {
+    display: none;
+}
