@@ -14,7 +14,9 @@ const AppartementDetailsPage = () => {
     const [user, setUser] = useState(null);
     const [editingField, setEditingField] = useState(null);
     const [tempValue, setTempValue] = useState("");
-    const [image, setImage] = useState(null);  // Store selected image
+    const [image, setImage] = useState(null);
+    const [imageURLs, setImageURLs] = useState([]);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged((currentUser) => {
@@ -30,7 +32,9 @@ const AppartementDetailsPage = () => {
                 const docSnap = await getDoc(docRef);
 
                 if (docSnap.exists()) {
-                    setAppartement(docSnap.data());
+                    const data = docSnap.data();
+                    setAppartement(data);
+                    setImageURLs(data.imageURLs || []);
                 } else {
                     setError('Appartement introuvable.');
                 }
@@ -65,7 +69,6 @@ const AppartementDetailsPage = () => {
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
-            console.log('Image sélectionnée :', file.name);
             setImage(file);
         }
     };
@@ -88,7 +91,7 @@ const AppartementDetailsPage = () => {
             }
 
             const data = await response.json();
-            return data.secure_url; // L'URL sécurisée de l'image
+            return data.secure_url;
         } catch (err) {
             console.error('Erreur lors de l’upload Cloudinary:', err);
             throw err;
@@ -98,17 +101,25 @@ const AppartementDetailsPage = () => {
     const uploadImage = async () => {
         if (!image) return;
         try {
-            // Upload image to Cloudinary
             const imageURL = await uploadImageToCloudinary(image);
-
-            // Update image in Firestore
+            const updatedImages = [...imageURLs, imageURL];
             const docRef = doc(db, 'locations', locationId, 'appartements', appartementId);
-            await updateDoc(docRef, { imageURL });
-            setAppartement({ ...appartement, imageURL });
-
+            await updateDoc(docRef, { imageURLs: updatedImages });
+            setImageURLs(updatedImages);
+            setAppartement({ ...appartement, imageURLs: updatedImages });
         } catch (err) {
-            console.error('Erreur lors de l\'upload de l\'image:', err);
+            console.error("Erreur lors de l'upload de l'image:", err);
         }
+    };
+
+    const handleNextImage = () => {
+        setCurrentImageIndex((prevIndex) => (prevIndex + 1) % imageURLs.length);
+    };
+
+    const handlePrevImage = () => {
+        setCurrentImageIndex((prevIndex) => 
+            prevIndex === 0 ? imageURLs.length - 1 : prevIndex - 1
+        );
     };
 
     if (loading) return <p>Chargement...</p>;
@@ -117,56 +128,61 @@ const AppartementDetailsPage = () => {
         <div>
             <div className="navbar">
                 <div className="logo">
-                    <img src={logo} alt="Logo" style={{ width: '4vw', height: '4vw', borderRadius: '56%'}} />
+                    <img src={logo} alt="Logo" style={{ width: '4vw', height: '4vw', borderRadius: '56%' }} />
                 </div>
-                <div className="status-label">{user ? 'Connected' : 'Not Connected'}</div>
                 <div>
-                    <a href="/" className="nav-link">Accueil</a>
+                    <a href="/" className="nav-link">Accueil</a> 
                     <a href="/proprietaires" className="nav-link">Propriétaires</a>
                     <a href="/connexion" className="nav-link">Connexion</a>
                 </div>
+                <div className="status-label">{user ? 'Connected' : 'Not Connected'}</div>
             </div>
 
             <div style={{ padding: '2vw' }}>
                 {error && <p className="error">{error}</p>}
                 {appartement ? (
                     <div className="appartement-details">
-                        <h1 style={{ textAlign: 'center' }} onClick={() => handleFieldClick('name')}>
+                        <h1 onClick={() => handleFieldClick('name')}>
                             {editingField === 'name' ? (
                                 <input type="text" value={tempValue} onChange={handleFieldChange} onBlur={saveField} autoFocus />
                             ) : (
                                 appartement.name
                             )}
                         </h1>
-                        {appartement.imageURL && (
-                            <img
-                                src={appartement.imageURL}
-                                alt={appartement.name}
-                                style={{ width: '45%', maxWidth: '20vw', height: 'auto', objectFit: 'cover', borderRadius: '1vw', marginBottom: '2vh', marginLeft: '79vh' }}
-                            />
+                        <p onClick={() => handleFieldClick('price')}>
+                            {editingField === 'price' ? (
+                                <input type="text" value={tempValue} onChange={handleFieldChange} onBlur={saveField} autoFocus />
+                            ) : (
+                                `Prix: ${appartement.price}` // Format "Prix: monprix"
+                            )}
+                        </p>
+
+                        {/* Affichage de l'adresse */}
+                        <p onClick={() => handleFieldClick('Adress')}>
+                            {editingField === 'Adress' ? (
+                                <input type="text" value={tempValue} onChange={handleFieldChange} onBlur={saveField} autoFocus />
+                            ) : (
+                                `Adresse: ${appartement.Adress}` // Affichage de l'adresse
+                            )}
+                        </p>
+                        {imageURLs.length > 0 && (
+                            <div className="image-carousel">
+                                <button onClick={handlePrevImage}>◀</button>
+                                <img src={imageURLs[currentImageIndex]} alt="Appartement" style={{ width: '45%', maxWidth: '20vw', height: 'auto', objectFit: 'cover', borderRadius: '1vw' }} />
+                                <button onClick={handleNextImage}>▶</button>
+                            </div>
                         )}
-                        <p style={{ fontSize: '1.2rem', marginBottom: '2vh' }} onClick={() => handleFieldClick('description')}>
+                        <p onClick={() => handleFieldClick('description')}>
                             {editingField === 'description' ? (
                                 <input type="text" value={tempValue} onChange={handleFieldChange} onBlur={saveField} autoFocus />
                             ) : (
                                 appartement.description
                             )}
                         </p>
-                        <p style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
-                            Prix : {appartement.price} €
-                        </p>
-                        <p style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
-                            Adresse : {appartement.Adress}
-                        </p>
-
                         {user && (
                             <div>
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={handleImageChange}
-                                />
-                                <button onClick={uploadImage}>Télécharger l'image</button>
+                                <input type="file" accept="image/*" onChange={handleImageChange} />
+                                <button onClick={uploadImage}>Ajouter une image</button>
                             </div>
                         )}
                     </div>
