@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from './firebase-config';
 import '../css/Home.css';
@@ -12,11 +12,11 @@ const AppartementDetailsPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [user, setUser] = useState(null);
-    const [editingField, setEditingField] = useState(null);
-    const [tempValue, setTempValue] = useState("");
     const [image, setImage] = useState(null);
     const [imageURLs, setImageURLs] = useState([]);
-    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [editingField, setEditingField] = useState(null);
+    const [tempValue, setTempValue] = useState("");
 
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged((currentUser) => {
@@ -35,6 +35,7 @@ const AppartementDetailsPage = () => {
                     const data = docSnap.data();
                     setAppartement(data);
                     setImageURLs(data.imageURLs || []);
+                    setSelectedImage(data.imageURLs ? data.imageURLs[0] : null);
                 } else {
                     setError('Appartement introuvable.');
                 }
@@ -48,6 +49,12 @@ const AppartementDetailsPage = () => {
         fetchAppartement();
     }, [locationId, appartementId]);
 
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setImage(file);
+        }
+    };
     const handleFieldClick = (field) => {
         if (!user) return;
         setEditingField(field);
@@ -64,13 +71,6 @@ const AppartementDetailsPage = () => {
         await updateDoc(docRef, { [editingField]: tempValue });
         setAppartement({ ...appartement, [editingField]: tempValue });
         setEditingField(null);
-    };
-
-    const handleImageChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setImage(file);
-        }
     };
 
     const uploadImageToCloudinary = async (file) => {
@@ -106,20 +106,25 @@ const AppartementDetailsPage = () => {
             const docRef = doc(db, 'locations', locationId, 'appartements', appartementId);
             await updateDoc(docRef, { imageURLs: updatedImages });
             setImageURLs(updatedImages);
+            setSelectedImage(imageURL);
             setAppartement({ ...appartement, imageURLs: updatedImages });
         } catch (err) {
             console.error("Erreur lors de l'upload de l'image:", err);
         }
     };
 
-    const handleNextImage = () => {
-        setCurrentImageIndex((prevIndex) => (prevIndex + 1) % imageURLs.length);
-    };
-
-    const handlePrevImage = () => {
-        setCurrentImageIndex((prevIndex) => 
-            prevIndex === 0 ? imageURLs.length - 1 : prevIndex - 1
-        );
+    const deleteImage = async (url) => {
+        try {
+            const updatedImages = imageURLs.filter((imageURL) => imageURL !== url);
+            const docRef = doc(db, 'locations', locationId, 'appartements', appartementId);
+            await updateDoc(docRef, { imageURLs: updatedImages });
+            setImageURLs(updatedImages);
+            if (selectedImage === url) {
+                setSelectedImage(updatedImages[0] || null);
+            }
+        } catch (err) {
+            console.error('Erreur lors de la suppression de l\'image:', err);
+        }
     };
 
     if (loading) return <p>Chargement...</p>;
@@ -130,17 +135,18 @@ const AppartementDetailsPage = () => {
                 <div className="logo">
                     <img src={logo} alt="Logo" style={{ width: '4vw', height: '4vw', borderRadius: '56%' }} />
                 </div>
-                <div>
-                    <a href="/" className="nav-link">Accueil</a> 
-                    <a href="/proprietaires" className="nav-link">Propriétaires</a>
-                    <a href="/connexion" className="nav-link">Connexion</a>
+                <div className="nav-links">
+                    <Link to="/" className="nav-link">Accueil</Link>
+                    <Link to="/proprietaires" className="nav-link">Propriétaires</Link>
+                    {/* <Link to="/connexion" className="nav-link">Connexion</Link> */}
                 </div>
-                <div className="status-label">{user ? 'Connected' : 'Not Connected'}</div>
+
+                <div className="status-label">{user ? 'Connecté' : 'Non connecté'}</div>
             </div>
 
             <div style={{ padding: '2vw' }}>
                 {error && <p className="error">{error}</p>}
-                {appartement ? (
+                {appartement && (
                     <div className="appartement-details">
                         <h1 onClick={() => handleFieldClick('name')}>
                             {editingField === 'name' ? (
@@ -165,13 +171,6 @@ const AppartementDetailsPage = () => {
                                 `Adresse: ${appartement.Adress}` // Affichage de l'adresse
                             )}
                         </p>
-                        {imageURLs.length > 0 && (
-                            <div className="image-carousel">
-                                <button onClick={handlePrevImage}>◀</button>
-                                <img src={imageURLs[currentImageIndex]} alt="Appartement" style={{ width: '45%', maxWidth: '20vw', height: 'auto', objectFit: 'cover', borderRadius: '1vw' }} />
-                                <button onClick={handleNextImage}>▶</button>
-                            </div>
-                        )}
                         <p onClick={() => handleFieldClick('description')}>
                             {editingField === 'description' ? (
                                 <input type="text" value={tempValue} onChange={handleFieldChange} onBlur={saveField} autoFocus />
@@ -179,6 +178,35 @@ const AppartementDetailsPage = () => {
                                 appartement.description
                             )}
                         </p>
+
+
+                        {selectedImage && (
+                            <div className="main-image-container">
+                                <img src={selectedImage} alt="Appartement" className="main-image" />
+                            </div>
+                        )}
+
+                        <div className="image-gallery">
+                            {imageURLs.map((url, index) => (
+                                <div key={index} className="image-container">
+                                    <img
+                                        src={url}
+                                        alt="Appartement"
+                                        className="thumbnail"
+                                        onClick={() => setSelectedImage(url)}
+                                    />
+                                    {user && (
+                                        <button
+                                            className="delete-btn"
+                                            onClick={() => deleteImage(url)}
+                                        >
+                                            &#10005;
+                                        </button>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+
                         {user && (
                             <div>
                                 <input type="file" accept="image/*" onChange={handleImageChange} />
@@ -186,10 +214,85 @@ const AppartementDetailsPage = () => {
                             </div>
                         )}
                     </div>
-                ) : (
-                    <p>Appartement introuvable.</p>
                 )}
             </div>
+
+            <style jsx>{`
+                .navbar {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 1vw;
+                    background-color: #2c3e50;
+                }
+                .logo img {
+                    width: 2vw;
+                    height: 2vw;
+                    border-radius: 50%;
+                }
+                .nav-links {
+                    display: flex;
+                    gap: 2vw;
+                }
+                .nav-link {
+                    text-decoration: none;
+                    color: white;
+                    font-size: 1.5vw;
+                    transition: color 0.3s ease;
+                }
+                .nav-link:hover {
+                    color: #ecf0f1;
+                }
+                .status-label {
+                    color: white;
+                    font-size: 1.2vw;
+                }
+
+                .main-image-container {
+                    text-align: center;
+                    margin-bottom: 2vw;
+                }
+                .main-image {
+                    width: 50%;
+                    max-width: 35rem;
+                    border-radius: var(--border-radius);
+                }
+                .image-gallery {
+                    display: flex;
+                    gap: 2vw;
+                    justify-content: center;
+                    flex-wrap: wrap;
+                }
+                .image-container {
+                    position: relative;
+                }
+                .thumbnail {
+                    width: 10vw;
+                    height: 10vw;
+                    object-fit: cover;
+                    cursor: pointer;
+                    border-radius: var(--border-radius);
+                    transition: transform 0.2s;
+                }
+                .thumbnail:hover {
+                    transform: scale(1.1);
+                }
+                .delete-btn {
+                    position: absolute;
+                    top: 1vw;
+                    right: 1vw;
+                    background: rgba(255, 0, 0, 0.7);
+                    border: none;
+                    color: white;
+                    font-size: 1vw;
+                    border-radius: 50%;
+                    cursor: pointer;
+                    padding: 0.5vw;
+                }
+                .delete-btn:hover {
+                    background: red;
+                }
+            `}</style>
         </div>
     );
 };
