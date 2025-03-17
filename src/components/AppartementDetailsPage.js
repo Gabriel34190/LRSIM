@@ -18,6 +18,7 @@ const AppartementDetailsPage = () => {
     const [editingField, setEditingField] = useState(null);
     const [tempValue, setTempValue] = useState("");
 
+
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged((currentUser) => {
             setUser(currentUser);
@@ -126,7 +127,6 @@ const AppartementDetailsPage = () => {
             console.error('Erreur lors de la suppression de l\'image:', err);
         }
     };
-
     if (loading) return <p>Chargement...</p>;
 
     return (
