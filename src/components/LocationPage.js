@@ -105,7 +105,7 @@ const LocationPage = () => {
                 <div>
                     <a href="/" className="nav-link">Accueil</a>
                     <a href="/proprietaires" className="nav-link">Propriétaires</a>
-                    <a href="/connexion" className="nav-link">Connexion</a>
+                    {/* <a href="/connexion" className="nav-link">Connexion</a> */}
                 </div>
             </div>
 

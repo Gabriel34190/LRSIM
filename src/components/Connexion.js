@@ -18,7 +18,7 @@ function Connexion() {
         const user = userCredential.user;
         console.log("Admin connecté", user);
         // Redirection vers la page d'accueil
-        navigate('/');  // Changez ceci si votre route d'accueil est différente
+        navigate('/');
       })
       .catch((error) => {
         setError("Identifiants incorrects");
