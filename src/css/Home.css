@@ -28,15 +28,6 @@
     margin-bottom: 2vw;
 }
 
-.location-card {
-    display: inline-block;
-    margin-top: 2vw;
-    cursor: pointer;
-    border-radius: var(--border-radius);
-    box-shadow: 0 0.4vw 0.8vw var(--shadow-color);
-    transition: transform 0.3s ease;
-    width: 90%; /* Utilisation de la largeur maximale */
-}
 
 .location-card:hover {
     transform: scale(1.05);
@@ -166,18 +157,23 @@
     }
 }
 
-
-.location-card {
-    width: 80vw; /* 80% de la largeur de l'écran */
-    max-width: 300px; /* Limite maximale à 300px */
-    height: auto; /* Pour garder le ratio */
+.locations-container {
+    display: flex;
+    flex-wrap: wrap; /* Permet de passer à la ligne si pas assez de place */
+    justify-content: center; /* Centre les cartes horizontalement */
+    gap: 2vw; /* Espace entre les cartes */
 }
 
 .location-card {
-    display: inline-block;
+    width: 300px; /* Taille raisonnable */
+    height: auto; /* Laisse la hauteur s'ajuster automatiquement */
+    max-width: 90%; /* Empêche d'être trop large sur petits écrans */
+}
+
+.location-card {
     position: relative;
-    width: 300px; /* Largeur fixe */
-    height: 300px; /* Hauteur égale à la largeur pour un carré */
+    width: 300vh; /* Largeur fixe */
+    height: 300 vw; /* Hauteur égale à la largeur pour un carré */
     margin: 1vw auto; /* Centrer horizontalement avec auto */
     cursor: pointer;
     border-radius: var(--border-radius);
