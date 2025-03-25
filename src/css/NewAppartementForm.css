@@ -1,14 +1,21 @@
-/* Style de la barre de progression */
+:root {
+    --progress-bar-height: 0.5rem; /* 8px en rem */
+    --progress-bar-radius: 0.25rem; /* 4px en rem */
+    --progress-bar-bg-color: #f3f3f3;
+    --progress-bar-color: #4caf50; /* Couleur de la barre */
+    --progress-bar-margin-top: 0.625rem; /* 10px en rem */
+}
+
 .progress-bar-container {
     width: 100%;
-    background-color: #f3f3f3;
-    border-radius: 4px;
-    margin-top: 10px;
+    background-color: var(--progress-bar-bg-color);
+    border-radius: var(--progress-bar-radius);
+    margin-top: var(--progress-bar-margin-top);
 }
 
 .progress-bar {
-    height: 8px;
-    background-color: #4caf50; /* Couleur de la barre */
-    border-radius: 4px;
+    height: var(--progress-bar-height);
+    background-color: var(--progress-bar-color);
+    border-radius: var(--progress-bar-radius);
     transition: width 0.3s ease;
 }
