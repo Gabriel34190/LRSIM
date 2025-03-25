@@ -1,41 +1,53 @@
+:root {
+    --base-font-size: 16px; /* Taille de base pour 1rem */
+    --spacing-unit: 1rem; /* Unité de base pour les espacements */
+    --button-padding: 0.625rem 1.25rem; /* 10px 20px en rem */
+    --input-padding: 0.625rem; /* 10px en rem */
+    --border-radius: 0.3125rem; /* 5px en rem */
+    --font-size-title: 2rem; /* 32px en rem */
+    --font-size-input: 1.875rem; /* 30px en rem pour une meilleure adaptation */
+    --font-size-button: 1rem; /* Taille du texte du bouton en rem */
+}
+
 .login-container {
     text-align: center;
-    padding: 50px;
+    padding: calc(3 * var(--spacing-unit)); /* 50px en rem */
 }
 
 .login-title {
-    font-size: 32px;
+    font-size: var(--font-size-title);
     font-weight: bold;
     color: #333;
-    margin-bottom: 20px;
+    margin-bottom: calc(1.25 * var(--spacing-unit)); /* 20px en rem */
 }
 
 .login-form {
     display: inline-block;
-    margin-top: 30px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    padding: 20px;
+    margin-top: calc(1.875 * var(--spacing-unit)); /* 30px en rem */
+    border-radius: var(--border-radius);
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.2);
+    padding: calc(1.25 * var(--spacing-unit)); /* 20px en rem */
     background-color: white;
 }
 
 .login-form input {
-    width: 300px;
-    padding: 10px;
-    margin: 10px 0;
-    border-radius: 5px;
+    width: 18.75rem; /* 300px en rem */
+    padding: var(--input-padding);
+    margin: calc(0.625 * var(--spacing-unit)) 0;
+    border-radius: var(--border-radius);
     border: 1px solid #ccc;
 }
 
 .login-form button {
-    padding: 10px 20px;
+    padding: var(--button-padding);
     border: none;
-    border-radius: 5px;
+    border-radius: var(--border-radius);
     background-color: #003366; /* Couleur de fond du bouton */
     color: white;
     font-weight: bold;
     cursor: pointer;
     transition: background-color 0.3s ease;
+    font-size: var(--font-size-button);
 }
 
 .login-form button:hover {
