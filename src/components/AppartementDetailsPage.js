@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from './firebase-config';
+import { Dialog } from "@headlessui/react";
 import '../css/Home.css';
 import '../css/LocationPage.css';
 import logo from '../images/LRSIM.png';
@@ -17,6 +18,7 @@ const AppartementDetailsPage = () => {
     const [selectedImage, setSelectedImage] = useState(null);
     const [editingField, setEditingField] = useState(null);
     const [tempValue, setTempValue] = useState("");
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
 
     useEffect(() => {
@@ -181,10 +183,37 @@ const AppartementDetailsPage = () => {
 
 
                         {selectedImage && (
-                            <div className="main-image-container">
-                                <img src={selectedImage} alt="Appartement" className="main-image" />
-                            </div>
+                        <div className="main-image-container">
+                            <img
+                                src={selectedImage}
+                                alt="Appartement"
+                                className="main-image"
+                                onClick={() => setIsModalOpen(true)} // Ouvre la modale au clic
+                            />
+                        </div>
                         )}
+                       <Dialog
+                        open={isModalOpen}
+                        onClose={() => setIsModalOpen(false)}
+                        className="relative z-50"
+                        >
+                        <div className="fixed inset-0 bg-black/70 flex items-center justify-center">
+                          <Dialog.Panel className="relative">
+                            <img
+                              src={selectedImage}
+                              alt="Aperçu"
+                              className="max-w-[90vw] max-h-[90vh] rounded-lg"
+                            />
+                            <button
+                              className="absolute top-2 right-2 bg-white p-2 rounded-full shadow-md"
+                              onClick={() => setIsModalOpen(false)}
+                            >
+                              ❌
+                            </button>
+                          </Dialog.Panel>
+                        </div>
+                        </Dialog>
+
 
                         <div className="image-gallery">
                             {imageURLs.map((url, index) => (
