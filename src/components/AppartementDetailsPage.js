@@ -190,22 +190,21 @@ const AppartementDetailsPage = () => {
         <div>
             <div className="navbar">
                 <div className="logo">
-                    <img src={logo} alt="Logo" style={{ width: '4vw', height: '4vw', borderRadius: '56%' }} />
+                    <img src={logo} alt="Logo" />
                 </div>
                 <div className="nav-links">
                     <Link to="/" className="nav-link">Accueil</Link>
                     <Link to="/proprietaires" className="nav-link">Propriétaires</Link>
                 </div>
-
                 <div className="status-label">{user ? 'Connecté' : 'Non connecté'}</div>
             </div>
 
-            <div style={{ padding: '2vw' }}>
+            <div className="appartement-details">
                 {error && <p className="error">{error}</p>}
                 {appartement && (
-                    <div className="appartement-details">
+                    <div>
                         <h1 
-                            style={{ marginBottom: '2vw' }}
+                            className="appartement-title"
                             onClick={() => handleFieldClick('name')}
                         >
                             {editingField === 'name' ? (
@@ -215,10 +214,8 @@ const AppartementDetailsPage = () => {
                             )}
                         </h1>
 
-                        <div style={{ marginBottom: '1vw' }}>
-                            <p 
-                                onClick={() => handleFieldClick('description')}
-                            >
+                        <div className="appartement-section">
+                            <p onClick={() => handleFieldClick('description')}>
                                 {editingField === 'description' ? (
                                     <input type="text" value={tempValue} onChange={handleFieldChange} onBlur={saveField} autoFocus />
                                 ) : (
@@ -227,10 +224,8 @@ const AppartementDetailsPage = () => {
                             </p>
                         </div>
 
-                        <div style={{ marginBottom: '1vw' }}>
-                            <p 
-                                onClick={() => handleFieldClick('price')}
-                            >
+                        <div className="appartement-section">
+                            <p onClick={() => handleFieldClick('price')}>
                                 {editingField === 'price' ? (
                                     <input type="text" value={tempValue} onChange={handleFieldChange} onBlur={saveField} autoFocus />
                                 ) : (
@@ -239,10 +234,8 @@ const AppartementDetailsPage = () => {
                             </p>
                         </div>
 
-                        <div style={{ marginBottom: '2vw' }}>
-                            <p 
-                                onClick={() => handleFieldClick('Adress')}
-                            >
+                        <div className="appartement-address">
+                            <p onClick={() => handleFieldClick('Adress')}>
                                 {editingField === 'Adress' ? (
                                     <input type="text" value={tempValue} onChange={handleFieldChange} onBlur={saveField} autoFocus />
                                 ) : (
@@ -252,45 +245,25 @@ const AppartementDetailsPage = () => {
                         </div>
 
                         {user ? (
-                            <div style={{ 
-                                marginBottom: '2vw',
-                                padding: '1vw',
-                                border: '0.1vw solid #ddd',
-                                borderRadius: '0.8vw',
-                                backgroundColor: appartement.status === 'Indisponible' ? '#ffebee' : '#e8f5e9'
-                            }}>
-                                <h3 style={{ marginBottom: '1vw', fontSize: '1.2vw' }}>État de l'appartement</h3>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '1vw' }}>
+                            <div className={`status-container ${appartement.status === 'Disponible' ? 'available' : 'unavailable'}`}>
+                                <h3 className="status-title">État de l'appartement</h3>
+                                <div className="status-buttons">
                                     <button
                                         onClick={() => handleAvailabilityChange('Disponible')}
-                                        style={{
-                                            backgroundColor: appartement.status === 'Disponible' ? '#4caf50' : '#fff',
-                                            color: appartement.status === 'Disponible' ? '#fff' : '#4caf50',
-                                            border: '0.1vw solid #4caf50',
-                                            padding: '0.5vw 1vw',
-                                            borderRadius: '0.4vw',
-                                            cursor: 'pointer'
-                                        }}
+                                        className={`status-button available ${appartement.status === 'Disponible' ? 'active' : 'inactive'}`}
                                     >
                                         Disponible
                                     </button>
                                     <button
                                         onClick={() => handleAvailabilityChange('Indisponible')}
-                                        style={{
-                                            backgroundColor: appartement.status === 'Indisponible' ? '#f44336' : '#fff',
-                                            color: appartement.status === 'Indisponible' ? '#fff' : '#f44336',
-                                            border: '0.1vw solid #f44336',
-                                            padding: '0.5vw 1vw',
-                                            borderRadius: '0.4vw',
-                                            cursor: 'pointer'
-                                        }}
+                                        className={`status-button unavailable ${appartement.status === 'Indisponible' ? 'active' : 'inactive'}`}
                                     >
                                         Indisponible
                                     </button>
                                 </div>
                                 {appartement.status === 'Indisponible' && (
-                                    <div style={{ marginTop: '1vw' }}>
-                                        <label style={{ display: 'block', marginBottom: '0.5vw', fontSize: '1vw' }}>
+                                    <div className="contract-date">
+                                        <label className="contract-date-label">
                                             Date de fin de contrat :
                                         </label>
                                         <input
@@ -298,31 +271,20 @@ const AppartementDetailsPage = () => {
                                             value={contractEndDate}
                                             onChange={handleContractEndDateChange}
                                             onBlur={() => handleAvailabilityChange('Indisponible')}
-                                            style={{
-                                                padding: '0.5vw',
-                                                border: '0.1vw solid #ddd',
-                                                borderRadius: '0.4vw',
-                                                fontSize: '1vw'
-                                            }}
+                                            className="contract-date-input"
                                         />
                                     </div>
                                 )}
                                 {appartement.contractEndDate && (
-                                    <p style={{ marginTop: '1vw', fontSize: '1vw', color: '#666' }}>
+                                    <p className="contract-end-text">
                                         Indisponible jusqu'au : {new Date(appartement.contractEndDate).toLocaleDateString()}
                                     </p>
                                 )}
                             </div>
                         ) : (
-                            <div style={{ 
-                                marginBottom: '2vw',
-                                padding: '1vw',
-                                border: '0.1vw solid #ddd',
-                                borderRadius: '0.8vw',
-                                backgroundColor: appartement.status === 'Indisponible' ? '#ffebee' : '#e8f5e9'
-                            }}>
-                                <h3 style={{ marginBottom: '1vw', fontSize: '1.2vw' }}>État de l'appartement</h3>
-                                <p style={{ fontSize: '1vw', color: '#666' }}>
+                            <div className={`status-container ${appartement.status === 'Disponible' ? 'available' : 'unavailable'}`}>
+                                <h3 className="status-title">État de l'appartement</h3>
+                                <p className="contract-end-text">
                                     {appartement.status === 'Disponible' ? 
                                         'Cet appartement est actuellement disponible' : 
                                         `Cet appartement est indisponible${appartement.contractEndDate ? 
@@ -335,7 +297,7 @@ const AppartementDetailsPage = () => {
 
                         {selectedImage && (
                             <>
-                                <div style={{ textAlign: 'center', marginBottom: '2vw' }}>
+                                <div className="main-image-container">
                                     <img
                                         src={selectedImage}
                                         alt="Appartement"
@@ -368,7 +330,7 @@ const AppartementDetailsPage = () => {
                             </>
                         )}
 
-                        <div className="image-gallery" style={{ marginBottom: '2vw' }}>
+                        <div className="image-gallery">
                             {imageURLs.map((url, index) => (
                                 <div key={index} className="image-container">
                                     <img
@@ -390,7 +352,7 @@ const AppartementDetailsPage = () => {
                         </div>
 
                         {user && (
-                            <div style={{ marginBottom: '2vw' }}>
+                            <div className="appartement-section">
                                 <input type="file" accept="image/*" onChange={handleImageChange} />
                                 <button onClick={uploadImage}>Ajouter une image</button>
                             </div>
@@ -398,130 +360,52 @@ const AppartementDetailsPage = () => {
 
                         <button 
                             onClick={() => setIsEmailModalOpen(true)}
-                            style={{
-                                backgroundColor: '#1a73e8',
-                                color: 'white',
-                                padding: '0.8vw 1.6vw',
-                                border: 'none',
-                                borderRadius: '2vw',
-                                cursor: 'pointer',
-                                fontSize: '1vw',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.8vw'
-                            }}
+                            className="email-button"
                         >
-                            <span style={{ fontSize: '1.5vw' }}>✉️</span>
+                            <span className="email-icon">✉️</span>
                             Envoyer un email
                         </button>
 
                         {isEmailModalOpen && (
-                            <div style={{
-                                position: 'fixed',
-                                bottom: '0',
-                                right: '2vw',
-                                width: '40vw',
-                                backgroundColor: 'white',
-                                boxShadow: '0 0.2vw 1vw rgba(0,0,0,0.2)',
-                                borderTopLeftRadius: '0.8vw',
-                                borderTopRightRadius: '0.8vw',
-                                zIndex: 1000
-                            }}>
-                                <div style={{
-                                    backgroundColor: '#404040',
-                                    color: 'white',
-                                    padding: '1vw 1.5vw',
-                                    borderTopLeftRadius: '0.8vw',
-                                    borderTopRightRadius: '0.8vw',
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center'
-                                }}>
+                            <div className="email-modal">
+                                <div className="email-modal-header">
                                     <span>Nouveau message</span>
                                     <button 
                                         onClick={() => setIsEmailModalOpen(false)}
-                                        style={{
-                                            background: 'none',
-                                            border: 'none',
-                                            color: 'white',
-                                            cursor: 'pointer',
-                                            fontSize: '1.2vw'
-                                        }}
+                                        className="close-modal-button"
                                     >
                                         ×
                                     </button>
                                 </div>
-                                <form onSubmit={handleSendEmail} style={{ padding: '1.5vw' }}>
-                                    <div style={{
-                                        borderBottom: '0.1vw solid #ddd',
-                                        padding: '0.8vw 0',
-                                        display: 'flex',
-                                        alignItems: 'center'
-                                    }}>
-                                        <span style={{ color: '#666', width: '4vw' }}>À</span>
+                                <form onSubmit={handleSendEmail} className="email-form">
+                                    <div className="email-field">
+                                        <span className="email-label">À</span>
                                         <input
                                             type="email"
                                             value="sandra.rouchon@wanadoo.fr"
                                             disabled
-                                            style={{
-                                                border: 'none',
-                                                flex: 1,
-                                                outline: 'none',
-                                                color: '#666',
-                                                fontSize: '1vw'
-                                            }}
+                                            className="email-input disabled"
                                         />
                                     </div>
-                                    <div style={{
-                                        borderBottom: '0.1vw solid #ddd',
-                                        padding: '0.8vw 0',
-                                        display: 'flex',
-                                        alignItems: 'center'
-                                    }}>
-                                        <span style={{ color: '#666', width: '4vw' }}>Objet</span>
+                                    <div className="email-field">
+                                        <span className="email-label">Objet</span>
                                         <input
                                             type="text"
                                             value={emailSubject}
                                             onChange={(e) => setEmailSubject(e.target.value)}
                                             placeholder="Objet"
-                                            style={{
-                                                border: 'none',
-                                                flex: 1,
-                                                outline: 'none',
-                                                fontSize: '1vw'
-                                            }}
+                                            className="email-input"
                                         />
                                     </div>
                                     <textarea
                                         value={emailBody}
                                         onChange={(e) => setEmailBody(e.target.value)}
-                                        style={{
-                                            width: '100%',
-                                            height: '25vh',
-                                            border: 'none',
-                                            outline: 'none',
-                                            resize: 'none',
-                                            marginTop: '1vw',
-                                            fontSize: '1vw'
-                                        }}
+                                        className="email-textarea"
                                     />
-                                    <div style={{
-                                        padding: '1.5vw',
-                                        borderTop: '0.1vw solid #ddd',
-                                        backgroundColor: '#f9f9f9'
-                                    }}>
+                                    <div className="email-form-footer">
                                         <button
                                             type="submit"
-                                            style={{
-                                                backgroundColor: '#1a73e8',
-                                                color: 'white',
-                                                padding: '0.8vw 2vw',
-                                                border: 'none',
-                                                borderRadius: '0.4vw',
-                                                cursor: 'pointer',
-                                                fontSize: '1vw',
-                                                fontWeight: '500'
-                                            }}
+                                            className="send-email-button"
                                         >
                                             Envoyer
                                         </button>
@@ -532,83 +416,6 @@ const AppartementDetailsPage = () => {
                     </div>
                 )}
             </div>
-
-            <style jsx>{`
-                .navbar {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    padding: 1vw;
-                    background-color: #003366;
-                }
-                .logo img {
-                    width: 2vw;
-                    height: 2vw;
-                    border-radius: 50%;
-                }
-                .nav-links {
-                    display: flex;
-                    gap: 2vw;
-                }
-                .nav-link {
-                    text-decoration: none;
-                    color: white;
-                    font-size: 1.5vw;
-                    transition: color 0.3s ease;
-                }
-                .nav-link:hover {
-                    color: #ecf0f1;
-                }
-                .status-label {
-                    color: white;
-                    font-size: 1.2vw;
-                }
-
-                .main-image-container {
-                    text-align: center;
-                    margin-bottom: 2vw;
-                }
-                .main-image {
-                    width: 50%;
-                    max-width: 35vw;
-                    border-radius: var(--border-radius);
-                }
-                .image-gallery {
-                    display: flex;
-                    gap: 2vw;
-                    justify-content: center;
-                    flex-wrap: wrap;
-                }
-                .image-container {
-                    position: relative;
-                }
-                .thumbnail {
-                    width: 10vw;
-                    height: 10vw;
-                    object-fit: cover;
-                    cursor: pointer;
-                    border-radius: var(--border-radius);
-                    transition: transform 0.2s;
-                }
-                .thumbnail:hover {
-                    transform: scale(1.1);
-                }
-                .delete-btn {
-                    position: absolute;
-                    top: 0.5vw;
-                    right: 0.5vw;
-                    background: rgba(255, 0, 0, 0.7);
-                    border: none;
-                    color: white;
-                    font-size: 1vw;
-                    border-radius: 50%;
-                    cursor: pointer;
-                    padding: 0.5vw;
-                }
-                .delete-btn:hover {
-                    background: red;
-                }
-            `}</style>
         </div>
     );
 };
