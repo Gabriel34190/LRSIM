@@ -5,6 +5,7 @@ import { auth, db } from './firebase-config';
 import { Dialog } from "@headlessui/react";
 import '../css/Home.css';
 import '../css/LocationPage.css';
+import '../css/AppartementDetailsPage.css';
 import logo from '../images/LRSIM.png';
 
 const AppartementDetailsPage = () => {
@@ -19,7 +20,10 @@ const AppartementDetailsPage = () => {
     const [editingField, setEditingField] = useState(null);
     const [tempValue, setTempValue] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
-
+    const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+    const [emailSubject, setEmailSubject] = useState('');
+    const [emailBody, setEmailBody] = useState('');
+    const [contractEndDate, setContractEndDate] = useState('');
 
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged((currentUser) => {
@@ -39,6 +43,7 @@ const AppartementDetailsPage = () => {
                     setAppartement(data);
                     setImageURLs(data.imageURLs || []);
                     setSelectedImage(data.imageURLs ? data.imageURLs[0] : null);
+                    setContractEndDate(data.contractEndDate || '');
                 } else {
                     setError('Appartement introuvable.');
                 }
@@ -90,13 +95,13 @@ const AppartementDetailsPage = () => {
             });
 
             if (!response.ok) {
-                throw new Error('Échec de l’upload sur Cloudinary');
+                throw new Error("Échec de l'upload sur Cloudinary");
             }
 
             const data = await response.json();
             return data.secure_url;
         } catch (err) {
-            console.error('Erreur lors de l’upload Cloudinary:', err);
+            console.error("Erreur lors de l'upload Cloudinary:", err);
             throw err;
         }
     };
@@ -129,6 +134,56 @@ const AppartementDetailsPage = () => {
             console.error('Erreur lors de la suppression de l\'image:', err);
         }
     };
+
+    const handleSendEmail = (e) => {
+        e.preventDefault();
+        if (!emailSubject || !emailBody) {
+            alert('Veuillez remplir tous les champs');
+            return;
+        }
+
+        // Création du corps du message avec les informations de l'appartement
+        const fullEmailBody = `${emailBody}\n\n` +
+            `Informations de l'appartement :\n` +
+            `Nom : ${appartement.name}\n` +
+            `Prix : ${appartement.price}\n` +
+            `Adresse : ${appartement.Adress}\n` +
+            `Description : ${appartement.description}`;
+
+        // Création du lien mailto avec toutes les informations
+        const mailtoLink = `mailto:sandra.rouchon@wanadoo.fr?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(fullEmailBody)}`;
+
+        // Ouverture du client mail par défaut
+        window.location.href = mailtoLink;
+
+        // Fermeture du modal et réinitialisation des champs
+        setIsEmailModalOpen(false);
+        setEmailSubject('');
+        setEmailBody('');
+    };
+
+    const handleAvailabilityChange = async (newStatus) => {
+        if (!user) return;
+        try {
+            const docRef = doc(db, 'locations', locationId, 'appartements', appartementId);
+            await updateDoc(docRef, { 
+                status: newStatus,
+                contractEndDate: newStatus === 'Indisponible' ? contractEndDate : null
+            });
+            setAppartement({ 
+                ...appartement, 
+                status: newStatus,
+                contractEndDate: newStatus === 'Indisponible' ? contractEndDate : null
+            });
+        } catch (err) {
+            console.error('Erreur lors de la mise à jour du statut:', err);
+        }
+    };
+
+    const handleContractEndDateChange = (e) => {
+        setContractEndDate(e.target.value);
+    };
+
     if (loading) return <p>Chargement...</p>;
 
     return (
@@ -140,7 +195,6 @@ const AppartementDetailsPage = () => {
                 <div className="nav-links">
                     <Link to="/" className="nav-link">Accueil</Link>
                     <Link to="/proprietaires" className="nav-link">Propriétaires</Link>
-                    {/* <Link to="/connexion" className="nav-link">Connexion</Link> */}
                 </div>
 
                 <div className="status-label">{user ? 'Connecté' : 'Non connecté'}</div>
@@ -150,72 +204,171 @@ const AppartementDetailsPage = () => {
                 {error && <p className="error">{error}</p>}
                 {appartement && (
                     <div className="appartement-details">
-                        <h1 onClick={() => handleFieldClick('name')}>
+                        <h1 
+                            style={{ marginBottom: '2vw' }}
+                            onClick={() => handleFieldClick('name')}
+                        >
                             {editingField === 'name' ? (
                                 <input type="text" value={tempValue} onChange={handleFieldChange} onBlur={saveField} autoFocus />
                             ) : (
                                 appartement.name
                             )}
                         </h1>
-                        <p onClick={() => handleFieldClick('price')}>
-                            {editingField === 'price' ? (
-                                <input type="text" value={tempValue} onChange={handleFieldChange} onBlur={saveField} autoFocus />
-                            ) : (
-                                `Prix: ${appartement.price}` // Format "Prix: monprix"
-                            )}
-                        </p>
 
-                        {/* Affichage de l'adresse */}
-                        <p onClick={() => handleFieldClick('Adress')}>
-                            {editingField === 'Adress' ? (
-                                <input type="text" value={tempValue} onChange={handleFieldChange} onBlur={saveField} autoFocus />
-                            ) : (
-                                `Adresse: ${appartement.Adress}` // Affichage de l'adresse
-                            )}
-                        </p>
-                        <p onClick={() => handleFieldClick('description')}>
-                            {editingField === 'description' ? (
-                                <input type="text" value={tempValue} onChange={handleFieldChange} onBlur={saveField} autoFocus />
-                            ) : (
-                                appartement.description
-                            )}
-                        </p>
+                        <div style={{ marginBottom: '1vw' }}>
+                            <p 
+                                onClick={() => handleFieldClick('description')}
+                            >
+                                {editingField === 'description' ? (
+                                    <input type="text" value={tempValue} onChange={handleFieldChange} onBlur={saveField} autoFocus />
+                                ) : (
+                                    appartement.description
+                                )}
+                            </p>
+                        </div>
 
+                        <div style={{ marginBottom: '1vw' }}>
+                            <p 
+                                onClick={() => handleFieldClick('price')}
+                            >
+                                {editingField === 'price' ? (
+                                    <input type="text" value={tempValue} onChange={handleFieldChange} onBlur={saveField} autoFocus />
+                                ) : (
+                                    `Prix: ${appartement.price}`
+                                )}
+                            </p>
+                        </div>
+
+                        <div style={{ marginBottom: '2vw' }}>
+                            <p 
+                                onClick={() => handleFieldClick('Adress')}
+                            >
+                                {editingField === 'Adress' ? (
+                                    <input type="text" value={tempValue} onChange={handleFieldChange} onBlur={saveField} autoFocus />
+                                ) : (
+                                    `Adresse: ${appartement.Adress}`
+                                )}
+                            </p>
+                        </div>
+
+                        {user ? (
+                            <div style={{ 
+                                marginBottom: '2vw',
+                                padding: '1vw',
+                                border: '0.1vw solid #ddd',
+                                borderRadius: '0.8vw',
+                                backgroundColor: appartement.status === 'Indisponible' ? '#ffebee' : '#e8f5e9'
+                            }}>
+                                <h3 style={{ marginBottom: '1vw', fontSize: '1.2vw' }}>État de l'appartement</h3>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1vw' }}>
+                                    <button
+                                        onClick={() => handleAvailabilityChange('Disponible')}
+                                        style={{
+                                            backgroundColor: appartement.status === 'Disponible' ? '#4caf50' : '#fff',
+                                            color: appartement.status === 'Disponible' ? '#fff' : '#4caf50',
+                                            border: '0.1vw solid #4caf50',
+                                            padding: '0.5vw 1vw',
+                                            borderRadius: '0.4vw',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        Disponible
+                                    </button>
+                                    <button
+                                        onClick={() => handleAvailabilityChange('Indisponible')}
+                                        style={{
+                                            backgroundColor: appartement.status === 'Indisponible' ? '#f44336' : '#fff',
+                                            color: appartement.status === 'Indisponible' ? '#fff' : '#f44336',
+                                            border: '0.1vw solid #f44336',
+                                            padding: '0.5vw 1vw',
+                                            borderRadius: '0.4vw',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        Indisponible
+                                    </button>
+                                </div>
+                                {appartement.status === 'Indisponible' && (
+                                    <div style={{ marginTop: '1vw' }}>
+                                        <label style={{ display: 'block', marginBottom: '0.5vw', fontSize: '1vw' }}>
+                                            Date de fin de contrat :
+                                        </label>
+                                        <input
+                                            type="date"
+                                            value={contractEndDate}
+                                            onChange={handleContractEndDateChange}
+                                            onBlur={() => handleAvailabilityChange('Indisponible')}
+                                            style={{
+                                                padding: '0.5vw',
+                                                border: '0.1vw solid #ddd',
+                                                borderRadius: '0.4vw',
+                                                fontSize: '1vw'
+                                            }}
+                                        />
+                                    </div>
+                                )}
+                                {appartement.contractEndDate && (
+                                    <p style={{ marginTop: '1vw', fontSize: '1vw', color: '#666' }}>
+                                        Indisponible jusqu'au : {new Date(appartement.contractEndDate).toLocaleDateString()}
+                                    </p>
+                                )}
+                            </div>
+                        ) : (
+                            <div style={{ 
+                                marginBottom: '2vw',
+                                padding: '1vw',
+                                border: '0.1vw solid #ddd',
+                                borderRadius: '0.8vw',
+                                backgroundColor: appartement.status === 'Indisponible' ? '#ffebee' : '#e8f5e9'
+                            }}>
+                                <h3 style={{ marginBottom: '1vw', fontSize: '1.2vw' }}>État de l'appartement</h3>
+                                <p style={{ fontSize: '1vw', color: '#666' }}>
+                                    {appartement.status === 'Disponible' ? 
+                                        'Cet appartement est actuellement disponible' : 
+                                        `Cet appartement est indisponible${appartement.contractEndDate ? 
+                                            ` jusqu'au ${new Date(appartement.contractEndDate).toLocaleDateString()}` : 
+                                            ''}`
+                                    }
+                                </p>
+                            </div>
+                        )}
 
                         {selectedImage && (
-                        <div className="main-image-container">
-                            <img
-                                src={selectedImage}
-                                alt="Appartement"
-                                className="main-image"
-                                onClick={() => setIsModalOpen(true)} // Ouvre la modale au clic
-                            />
-                        </div>
+                            <>
+                                <div style={{ textAlign: 'center', marginBottom: '2vw' }}>
+                                    <img
+                                        src={selectedImage}
+                                        alt="Appartement"
+                                        className="main-image"
+                                        onClick={() => setIsModalOpen(true)}
+                                    />
+                                </div>
+
+                                <Dialog
+                                    open={isModalOpen}
+                                    onClose={() => setIsModalOpen(false)}
+                                    className="relative z-50"
+                                >
+                                    <div className="fixed inset-0 bg-black/70 flex items-center justify-center">
+                                        <Dialog.Panel className="relative">
+                                            <img
+                                                src={selectedImage}
+                                                alt="Aperçu"
+                                                className="max-w-[90vw] max-h-[90vh] rounded-lg"
+                                            />
+                                            <button
+                                                className="absolute top-[0.2vw] right-[0.2vw] bg-white p-[0.2vw] rounded-full shadow-md"
+                                                onClick={() => setIsModalOpen(false)}
+                                            >
+                                                ❌
+                                            </button>
+                                        </Dialog.Panel>
+                                    </div>
+                                </Dialog>
+                            </>
                         )}
-                       <Dialog
-                        open={isModalOpen}
-                        onClose={() => setIsModalOpen(false)}
-                        className="relative z-50"
-                        >
-                        <div className="fixed inset-0 bg-black/70 flex items-center justify-center">
-                          <Dialog.Panel className="relative">
-                            <img
-                              src={selectedImage}
-                              alt="Aperçu"
-                              className="max-w-[90vw] max-h-[90vh] rounded-lg"
-                            />
-                            <button
-                              className="absolute top-2 right-2 bg-white p-2 rounded-full shadow-md"
-                              onClick={() => setIsModalOpen(false)}
-                            >
-                              ❌
-                            </button>
-                          </Dialog.Panel>
-                        </div>
-                        </Dialog>
 
-
-                        <div className="image-gallery">
+                        <div className="image-gallery" style={{ marginBottom: '2vw' }}>
                             {imageURLs.map((url, index) => (
                                 <div key={index} className="image-container">
                                     <img
@@ -237,9 +390,143 @@ const AppartementDetailsPage = () => {
                         </div>
 
                         {user && (
-                            <div>
+                            <div style={{ marginBottom: '2vw' }}>
                                 <input type="file" accept="image/*" onChange={handleImageChange} />
                                 <button onClick={uploadImage}>Ajouter une image</button>
+                            </div>
+                        )}
+
+                        <button 
+                            onClick={() => setIsEmailModalOpen(true)}
+                            style={{
+                                backgroundColor: '#1a73e8',
+                                color: 'white',
+                                padding: '0.8vw 1.6vw',
+                                border: 'none',
+                                borderRadius: '2vw',
+                                cursor: 'pointer',
+                                fontSize: '1vw',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.8vw'
+                            }}
+                        >
+                            <span style={{ fontSize: '1.5vw' }}>✉️</span>
+                            Envoyer un email
+                        </button>
+
+                        {isEmailModalOpen && (
+                            <div style={{
+                                position: 'fixed',
+                                bottom: '0',
+                                right: '2vw',
+                                width: '40vw',
+                                backgroundColor: 'white',
+                                boxShadow: '0 0.2vw 1vw rgba(0,0,0,0.2)',
+                                borderTopLeftRadius: '0.8vw',
+                                borderTopRightRadius: '0.8vw',
+                                zIndex: 1000
+                            }}>
+                                <div style={{
+                                    backgroundColor: '#404040',
+                                    color: 'white',
+                                    padding: '1vw 1.5vw',
+                                    borderTopLeftRadius: '0.8vw',
+                                    borderTopRightRadius: '0.8vw',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center'
+                                }}>
+                                    <span>Nouveau message</span>
+                                    <button 
+                                        onClick={() => setIsEmailModalOpen(false)}
+                                        style={{
+                                            background: 'none',
+                                            border: 'none',
+                                            color: 'white',
+                                            cursor: 'pointer',
+                                            fontSize: '1.2vw'
+                                        }}
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+                                <form onSubmit={handleSendEmail} style={{ padding: '1.5vw' }}>
+                                    <div style={{
+                                        borderBottom: '0.1vw solid #ddd',
+                                        padding: '0.8vw 0',
+                                        display: 'flex',
+                                        alignItems: 'center'
+                                    }}>
+                                        <span style={{ color: '#666', width: '4vw' }}>À</span>
+                                        <input
+                                            type="email"
+                                            value="sandra.rouchon@wanadoo.fr"
+                                            disabled
+                                            style={{
+                                                border: 'none',
+                                                flex: 1,
+                                                outline: 'none',
+                                                color: '#666',
+                                                fontSize: '1vw'
+                                            }}
+                                        />
+                                    </div>
+                                    <div style={{
+                                        borderBottom: '0.1vw solid #ddd',
+                                        padding: '0.8vw 0',
+                                        display: 'flex',
+                                        alignItems: 'center'
+                                    }}>
+                                        <span style={{ color: '#666', width: '4vw' }}>Objet</span>
+                                        <input
+                                            type="text"
+                                            value={emailSubject}
+                                            onChange={(e) => setEmailSubject(e.target.value)}
+                                            placeholder="Objet"
+                                            style={{
+                                                border: 'none',
+                                                flex: 1,
+                                                outline: 'none',
+                                                fontSize: '1vw'
+                                            }}
+                                        />
+                                    </div>
+                                    <textarea
+                                        value={emailBody}
+                                        onChange={(e) => setEmailBody(e.target.value)}
+                                        style={{
+                                            width: '100%',
+                                            height: '25vh',
+                                            border: 'none',
+                                            outline: 'none',
+                                            resize: 'none',
+                                            marginTop: '1vw',
+                                            fontSize: '1vw'
+                                        }}
+                                    />
+                                    <div style={{
+                                        padding: '1.5vw',
+                                        borderTop: '0.1vw solid #ddd',
+                                        backgroundColor: '#f9f9f9'
+                                    }}>
+                                        <button
+                                            type="submit"
+                                            style={{
+                                                backgroundColor: '#1a73e8',
+                                                color: 'white',
+                                                padding: '0.8vw 2vw',
+                                                border: 'none',
+                                                borderRadius: '0.4vw',
+                                                cursor: 'pointer',
+                                                fontSize: '1vw',
+                                                fontWeight: '500'
+                                            }}
+                                        >
+                                            Envoyer
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
                         )}
                     </div>
@@ -252,7 +539,7 @@ const AppartementDetailsPage = () => {
                     justify-content: space-between;
                     align-items: center;
                     padding: 1vw;
-                    background-color: #2c3e50;
+                    background-color: #003366;
                 }
                 .logo img {
                     width: 2vw;
@@ -283,7 +570,7 @@ const AppartementDetailsPage = () => {
                 }
                 .main-image {
                     width: 50%;
-                    max-width: 35rem;
+                    max-width: 35vw;
                     border-radius: var(--border-radius);
                 }
                 .image-gallery {
@@ -308,8 +595,8 @@ const AppartementDetailsPage = () => {
                 }
                 .delete-btn {
                     position: absolute;
-                    top: 1vw;
-                    right: 1vw;
+                    top: 0.5vw;
+                    right: 0.5vw;
                     background: rgba(255, 0, 0, 0.7);
                     border: none;
                     color: white;
