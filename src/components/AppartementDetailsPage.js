@@ -285,10 +285,10 @@ const AppartementDetailsPage = () => {
                             <div className={`status-container ${appartement.status === 'Disponible' ? 'available' : 'unavailable'}`}>
                                 <h3 className="status-title">État de l'appartement</h3>
                                 <p className="contract-end-text">
-                                    {appartement.status === 'Disponible' ? 
-                                        'Cet appartement est actuellement disponible' : 
-                                        `Cet appartement est indisponible${appartement.contractEndDate ? 
-                                            ` jusqu'au ${new Date(appartement.contractEndDate).toLocaleDateString()}` : 
+                                    {appartement.status === 'Disponible' ?
+                                        'Cet appartement est actuellement disponible' :
+                                        `Cet appartement est indisponible${appartement.contractEndDate ?
+                                            ` jusqu'au ${new Date(appartement.contractEndDate).toLocaleDateString()}` :
                                             ''}`
                                     }
                                 </p>
