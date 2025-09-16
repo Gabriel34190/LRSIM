@@ -85,6 +85,13 @@
     margin-left: 2vw;
 }
 
+/* Taille du logo dans toutes les navbars utilisant Home.css */
+.logo img {
+    width: 4vw;
+    height: 4vw;
+    border-radius: 50%;
+}
+
 .status-label {
     font-size: 0.8rem;
     color: var(--status-label-color);

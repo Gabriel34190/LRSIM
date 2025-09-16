@@ -29,11 +29,11 @@ const Proprietaires = () => {
     return (
         <div>
             <div className="navbar">
-            <div className="logo">
-                <img src={logo} alt="Logo" style={{ width: '4vw', height: '4hw', borderRadius: '56%'}} />
-            </div>
-                <div>
-                    <a href="/" className="nav-link">Accueil</a> {/* Ajout du lien "Accueil" */}
+                <div className="logo">
+                    <img src={logo} alt="Logo" />
+                </div>
+                <div className="nav-links">
+                    <a href="/" className="nav-link">Accueil</a>
                     <a href="/proprietaires" className="nav-link">Propriétaires</a>
                     <a href="/connexion" className="nav-link">Connexion</a>
                 </div>

@@ -3,6 +3,8 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from './firebase-config';
 import { useNavigate } from 'react-router-dom';
 import '../css/Connexion.css';
+import '../css/Home.css';
+import logo from '../images/LRSIM.png';
 
 function Connexion() {
   const [email, setEmail] = useState("");
@@ -29,10 +31,13 @@ function Connexion() {
   return (
     <div>
       <div className="navbar">
-        <div className="logo">Mon Application</div>
-        <div>
-          <a href="/">Accueil</a>
-          <a href="/connexion">Connexion</a>
+        <div className="logo">
+          <img src={logo} alt="Logo" />
+        </div>
+        <div className="nav-links">
+          <a href="/" className="nav-link">Accueil</a>
+          <a href="/proprietaires" className="nav-link">Propriétaires</a>
+          <a href="/connexion" className="nav-link">Connexion</a>
         </div>
       </div>
 

@@ -110,10 +110,10 @@ const LocationPage = () => {
             {/* Navbar */}
             <div className="navbar">
                 <div className="logo">
-                    <img src={logo} alt="Logo" style={{ width: '4vw', height: '4vw', borderRadius: '50%' }} />
+                    <img src={logo} alt="Logo" />
                 </div>
                 <div className="status-label">{user ? 'Connected' : 'Not Connected'}</div>
-                <div>
+                <div className="nav-links">
                     <a href="/" className="nav-link">Accueil</a>
                     <a href="/proprietaires" className="nav-link">Propriétaires</a>
                 </div>

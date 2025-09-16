@@ -7,6 +7,7 @@ import '../css/Home.css';
 import '../css/LocationPage.css';
 import '../css/AppartementDetailsPage.css';
 import logo from '../images/LRSIM.png';
+import montpellierFallback from '../images/Montpellier.jpeg';
 
 const AppartementDetailsPage = () => {
     const { locationId, appartementId } = useParams();
@@ -42,7 +43,8 @@ const AppartementDetailsPage = () => {
                     const data = docSnap.data();
                     setAppartement(data);
                     setImageURLs(data.imageURLs || []);
-                    setSelectedImage(data.imageURLs ? data.imageURLs[0] : null);
+                    const firstImage = data.imageURLs && data.imageURLs.length > 0 ? data.imageURLs[0] : null;
+                    setSelectedImage(firstImage || montpellierFallback);
                     setContractEndDate(data.contractEndDate || '');
                 } else {
                     setError('Appartement introuvable.');
@@ -184,6 +186,16 @@ const AppartementDetailsPage = () => {
         setContractEndDate(e.target.value);
     };
 
+    const handleMainImageError = (e) => {
+        console.warn('Image principale introuvable, utilisation du fallback:', e?.target?.src);
+        e.target.src = montpellierFallback;
+    };
+
+    const handleThumbError = (e) => {
+        console.warn('Miniature introuvable, utilisation du fallback:', e?.target?.src);
+        e.target.src = montpellierFallback;
+    };
+
     if (loading) return <p>Chargement...</p>;
 
     return (
@@ -303,6 +315,7 @@ const AppartementDetailsPage = () => {
                                         alt="Appartement"
                                         className="main-image"
                                         onClick={() => setIsModalOpen(true)}
+                                        onError={handleMainImageError}
                                     />
                                 </div>
 
@@ -337,6 +350,7 @@ const AppartementDetailsPage = () => {
                                         src={url}
                                         alt="Appartement"
                                         className="thumbnail"
+                                        onError={handleThumbError}
                                         onClick={() => setSelectedImage(url)}
                                     />
                                     {user && (
