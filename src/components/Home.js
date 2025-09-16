@@ -5,12 +5,41 @@ import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore'; // Fir
 import '../css/Home.css';
 import NewLocationForm from './NewLocationForm';
 import logo from '../images/LRSIM.png'
+import montpellierFallback from '../images/Montpellier.jpeg'
 
 const Home = () => {
     const navigate = useNavigate();
     const [showForm, setShowForm] = useState(false);
     const [user, setUser] = useState(null);
     const [locations, setLocations] = useState([]); // Stocker les lieux récupérés
+
+    const normalizeCloudinaryUrl = (url) => {
+        if (!url || typeof url !== 'string') return '';
+        let u = url.trim();
+        if (!u) return '';
+        if (u.startsWith('http://')) u = 'https://' + u.slice('http://'.length);
+        const marker = '/image/upload/';
+        const idx = u.indexOf(marker);
+        if (idx !== -1 && !u.includes('/image/upload/f_auto,q_auto/')) {
+            u = u.replace(marker, '/image/upload/f_auto,q_auto/');
+        }
+        return u;
+    };
+
+    const getDisplayImageUrl = (location) => {
+        const fromDb = normalizeCloudinaryUrl(location?.imageURL || '');
+        if (fromDb) return fromDb;
+        if (location?.name?.toLowerCase() === 'montpellier') {
+            const envUrl = normalizeCloudinaryUrl(process.env.REACT_APP_CLOUDINARY_MONTPELLIER_URL || '');
+            if (envUrl) return envUrl;
+        }
+        return '';
+    };
+
+    const handleCardImgError = (e, location) => {
+        console.warn('Image non chargée, fallback utilisé pour:', location?.name, e?.target?.src);
+        e.target.src = montpellierFallback;
+    };
 
     useEffect(() => {
         // Vérifier l'état d'authentification
@@ -88,12 +117,12 @@ const Home = () => {
         <div>
             <div className="navbar">
             <div className="logo">
-                <img src={logo} alt="Logo" style={{ width: '4vw', height: '4hw', borderRadius: '56%'}} />
+                <img src={logo} alt="Logo" />
             </div>
 
                 <div className="status-label">{user ? 'Connected' : 'Not Connected'}</div>
 
-                <div>
+                <div className="nav-links">
                     <a
                         href="/proprietaires"
                         onClick={handleProprietairesClick}
@@ -137,9 +166,17 @@ const Home = () => {
                                 onClick={() => handleLocationClick(location.id)}
                             >
                                 <h2>{location.name}</h2>
-                                {location.imageURL && (
+                                {getDisplayImageUrl(location) && (
                                     <img
-                                        src={location.imageURL}
+                                        src={getDisplayImageUrl(location)}
+                                        alt={location.name}
+                                        style={{ width: '250px', height: '200px', objectFit: 'cover', borderRadius: '8px' }}
+                                        onError={(e) => handleCardImgError(e, location)}
+                                    />
+                                )}
+                                {!getDisplayImageUrl(location) && (
+                                    <img
+                                        src={montpellierFallback}
                                         alt={location.name}
                                         style={{ width: '250px', height: '200px', objectFit: 'cover', borderRadius: '8px' }}
                                     />
