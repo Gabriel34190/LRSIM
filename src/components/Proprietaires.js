@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../css/Proprietaires.css'; // Chemin vers le CSS
 import PhotoSandra from '../images/pion_gaby.jpg'; // Assurez-vous que le chemin est correct
-import logo from '../images/LRSIM.png'
+import logo from '../images/Lrsim_logo.png'
 
 
 const Proprietaires = () => {
