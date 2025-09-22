@@ -4,7 +4,7 @@ import { auth, db } from './firebase-config'; // Importation de Firestore
 import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore'; // Firestore
 import '../css/Home.css';
 import NewLocationForm from './NewLocationForm';
-import logo from '../images/LRSIM.png'
+import logo from '../images/Lrsim_logo.png'
 import montpellierFallback from '../images/Montpellier.jpeg'
 
 const Home = () => {

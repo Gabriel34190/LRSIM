@@ -5,7 +5,7 @@ import { auth, db } from './firebase-config';
 import NewAppartementForm from './NewAppartementForm';
 import '../css/Home.css';
 import '../css/LocationPage.css';
-import logo from '../images/LRSIM.png';
+import logo from '../images/Lrsim_logo.png';
 
 const LocationPage = () => {
     const { id } = useParams();

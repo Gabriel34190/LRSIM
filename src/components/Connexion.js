@@ -4,7 +4,7 @@ import { auth } from './firebase-config';
 import { useNavigate } from 'react-router-dom';
 import '../css/Connexion.css';
 import '../css/Home.css';
-import logo from '../images/LRSIM.png';
+import logo from '../images/Lrsim_logo.png';
 
 function Connexion() {
   const [email, setEmail] = useState("");
