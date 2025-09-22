@@ -310,6 +310,100 @@
     margin-bottom: 2vw;
 }
 
+/* Styles pour les champs d'édition */
+.edit-field-input {
+    width: 100%;
+    padding: 0.8vw;
+    border: 0.15vw solid #ddd;
+    border-radius: 0.5vw;
+    font-size: 1.1vw;
+    font-family: inherit;
+    background-color: #f9f9f9;
+    transition: border-color 0.3s ease, background-color 0.3s ease;
+    box-sizing: border-box;
+}
+
+.edit-field-input:focus {
+    outline: none;
+    border-color: #1a73e8;
+    background-color: white;
+    box-shadow: 0 0 0 0.2vw rgba(26, 115, 232, 0.2);
+}
+
+.edit-field-textarea {
+    width: 100%;
+    padding: 0.8vw;
+    border: 0.15vw solid #ddd;
+    border-radius: 0.5vw;
+    font-size: 1.1vw;
+    font-family: inherit;
+    background-color: #f9f9f9;
+    transition: border-color 0.3s ease, background-color 0.3s ease;
+    box-sizing: border-box;
+    resize: vertical;
+    min-height: 4vw;
+}
+
+.edit-field-textarea:focus {
+    outline: none;
+    border-color: #1a73e8;
+    background-color: white;
+    box-shadow: 0 0 0 0.2vw rgba(26, 115, 232, 0.2);
+}
+
+.edit-field-input::placeholder,
+.edit-field-textarea::placeholder {
+    color: #999;
+    font-style: italic;
+}
+
+/* Styles pour la section d'information email */
+.email-info {
+    background-color: #f0f8ff;
+    border: 0.1vw solid #1a73e8;
+    border-radius: 0.5vw;
+    padding: 1vw;
+    margin: 1vw 0;
+}
+
+.email-info p {
+    margin: 0;
+    font-size: 1vw;
+    color: #1a73e8;
+    line-height: 1.4;
+}
+
+.email-info p:not(:last-child) {
+    margin-bottom: 0.5vw;
+}
+
+/* Styles pour le champ de message personnalisé */
+.email-textarea {
+    width: 100%;
+    padding: 0.8vw;
+    border: 0.15vw solid #ddd;
+    border-radius: 0.5vw;
+    font-size: 1.1vw;
+    font-family: inherit;
+    background-color: #f9f9f9;
+    transition: border-color 0.3s ease, background-color 0.3s ease;
+    box-sizing: border-box;
+    resize: vertical;
+    min-height: 6vw;
+}
+
+.email-textarea:focus {
+    outline: none;
+    border-color: #1a73e8;
+    background-color: white;
+    box-shadow: 0 0 0 0.2vw rgba(26, 115, 232, 0.2);
+}
+
+.email-textarea::placeholder {
+    color: #999;
+    font-style: italic;
+}
+
 .status-container {
     margin-bottom: 2vw;
     padding: 1vw;
