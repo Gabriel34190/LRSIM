@@ -198,7 +198,7 @@ const LocationPage = () => {
                         />
                     )}
                     <p>{appartement.description}</p>
-                    <p>Prix : {appartement.price} €</p>
+                    <p>Loyer : {appartement.price} €</p>
                     <p>Adresse: {appartement.Adress}</p>
             </div>
                 ))}

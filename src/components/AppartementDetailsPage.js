@@ -21,8 +21,8 @@ const AppartementDetailsPage = () => {
     const [tempValue, setTempValue] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
-    const [emailSubject, setEmailSubject] = useState('');
-    const [emailBody, setEmailBody] = useState('');
+    const [clientEmail, setClientEmail] = useState('');
+    const [customMessage, setCustomMessage] = useState('');
     const [contractEndDate, setContractEndDate] = useState('');
 
     useEffect(() => {
@@ -137,29 +137,44 @@ const AppartementDetailsPage = () => {
 
     const handleSendEmail = (e) => {
         e.preventDefault();
-        if (!emailSubject || !emailBody) {
-            alert('Veuillez remplir tous les champs');
+        if (!clientEmail) {
+            alert('Veuillez saisir votre adresse email');
             return;
         }
 
-        // Création du corps du message avec les informations de l'appartement
-        const fullEmailBody = `${emailBody}\n\n` +
+        // Validation basique de l'email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(clientEmail)) {
+            alert('Veuillez saisir une adresse email valide');
+            return;
+        }
+
+        // Objet automatique avec le nom de l'appartement
+        const emailSubject = `Demande d'information - ${appartement.name}`;
+
+        // Corps du message avec le message personnalisé
+        const emailBody = `Bonjour,\n\n` +
+            `Je suis intéressé(e) par l'appartement "${appartement.name}" et souhaiterais obtenir plus d'informations.\n\n` +
+            (customMessage.trim() ? `Message :\n${customMessage.trim()}\n\n` : '') +
+            `Pourriez-vous me contacter à l'adresse : ${clientEmail}\n\n` +
+            `Cordialement,\n\n` +
+            `---\n` +
             `Informations de l'appartement :\n` +
             `Nom : ${appartement.name}\n` +
-            `Prix : ${appartement.price}\n` +
+            `Loyer : ${appartement.price}\n` +
             `Adresse : ${appartement.Adress}\n` +
             `Description : ${appartement.description}`;
 
         // Création du lien mailto avec toutes les informations
-        const mailtoLink = `mailto:sandra.rouchon@wanadoo.fr?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(fullEmailBody)}`;
+        const mailtoLink = `mailto:sandra.rouchon@wanadoo.fr?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
 
         // Ouverture du client mail par défaut
         window.location.href = mailtoLink;
 
         // Fermeture du modal et réinitialisation des champs
         setIsEmailModalOpen(false);
-        setEmailSubject('');
-        setEmailBody('');
+        setClientEmail('');
+        setCustomMessage('');
     };
 
     const handleAvailabilityChange = async (newStatus) => {
@@ -217,7 +232,14 @@ const AppartementDetailsPage = () => {
                         <div className="appartement-section">
                             <p onClick={() => handleFieldClick('description')}>
                                 {editingField === 'description' ? (
-                                    <input type="text" value={tempValue} onChange={handleFieldChange} onBlur={saveField} autoFocus />
+                                    <textarea 
+                                        value={tempValue} 
+                                        onChange={handleFieldChange} 
+                                        onBlur={saveField} 
+                                        autoFocus 
+                                        className="edit-field-textarea"
+                                        rows="4"
+                                    />
                                 ) : (
                                     appartement.description
                                 )}
@@ -227,9 +249,17 @@ const AppartementDetailsPage = () => {
                         <div className="appartement-section">
                             <p onClick={() => handleFieldClick('price')}>
                                 {editingField === 'price' ? (
-                                    <input type="text" value={tempValue} onChange={handleFieldChange} onBlur={saveField} autoFocus />
+                                    <input 
+                                        type="number" 
+                                        value={tempValue} 
+                                        onChange={handleFieldChange} 
+                                        onBlur={saveField} 
+                                        autoFocus 
+                                        className="edit-field-input"
+                                        placeholder="Entrez le loyer en euros"
+                                    />
                                 ) : (
-                                    `Prix: ${appartement.price}`
+                                    `Loyer: ${appartement.price}`
                                 )}
                             </p>
                         </div>
@@ -237,7 +267,15 @@ const AppartementDetailsPage = () => {
                         <div className="appartement-address">
                             <p onClick={() => handleFieldClick('Adress')}>
                                 {editingField === 'Adress' ? (
-                                    <input type="text" value={tempValue} onChange={handleFieldChange} onBlur={saveField} autoFocus />
+                                    <textarea 
+                                        value={tempValue} 
+                                        onChange={handleFieldChange} 
+                                        onBlur={saveField} 
+                                        autoFocus 
+                                        className="edit-field-textarea"
+                                        rows="2"
+                                        placeholder="Entrez l'adresse complète"
+                                    />
                                 ) : (
                                     `Adresse: ${appartement.Adress}`
                                 )}
@@ -369,7 +407,7 @@ const AppartementDetailsPage = () => {
                         {isEmailModalOpen && (
                             <div className="email-modal">
                                 <div className="email-modal-header">
-                                    <span>Nouveau message</span>
+                                    <span>Contacter le propriétaire</span>
                                     <button 
                                         onClick={() => setIsEmailModalOpen(false)}
                                         className="close-modal-button"
@@ -379,7 +417,18 @@ const AppartementDetailsPage = () => {
                                 </div>
                                 <form onSubmit={handleSendEmail} className="email-form">
                                     <div className="email-field">
-                                        <span className="email-label">À</span>
+                                        <span className="email-label">Votre adresse email</span>
+                                        <input
+                                            type="email"
+                                            value={clientEmail}
+                                            onChange={(e) => setClientEmail(e.target.value)}
+                                            placeholder="votre.email@exemple.com"
+                                            className="email-input"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="email-field">
+                                        <span className="email-label">Destinataire</span>
                                         <input
                                             type="email"
                                             value="sandra.rouchon@wanadoo.fr"
@@ -388,26 +437,36 @@ const AppartementDetailsPage = () => {
                                         />
                                     </div>
                                     <div className="email-field">
-                                        <span className="email-label">Objet</span>
-                                        <input
-                                            type="text"
-                                            value={emailSubject}
-                                            onChange={(e) => setEmailSubject(e.target.value)}
-                                            placeholder="Objet"
-                                            className="email-input"
+                                        <span className="email-label">Votre message (optionnel)</span>
+                                        <textarea
+                                            value={customMessage}
+                                            onChange={(e) => setCustomMessage(e.target.value)}
+                                            placeholder="Écrivez ici votre message, vos questions ou vos besoins spécifiques..."
+                                            className="email-textarea"
+                                            rows="4"
                                         />
                                     </div>
-                                    <textarea
-                                        value={emailBody}
-                                        onChange={(e) => setEmailBody(e.target.value)}
-                                        className="email-textarea"
-                                    />
+                                    <div className="email-field">
+                                        <span className="email-label">Objet (automatique)</span>
+                                        <input
+                                            type="text"
+                                            value={`Demande d'information - ${appartement.name}`}
+                                            disabled
+                                            className="email-input disabled"
+                                        />
+                                    </div>
+                                    <div className="email-info">
+                                        <p>Un email sera automatiquement généré avec votre demande d'information pour l'appartement "{appartement.name}".</p>
+                                        {customMessage.trim() && (
+                                            <p><strong>Votre message sera inclus dans l'email.</strong></p>
+                                        )}
+                                    </div>
                                     <div className="email-form-footer">
                                         <button
                                             type="submit"
                                             className="send-email-button"
                                         >
-                                            Envoyer
+                                            Envoyer l'email
                                         </button>
                                     </div>
                                 </form>

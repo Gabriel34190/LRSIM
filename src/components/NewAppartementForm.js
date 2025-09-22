@@ -123,7 +123,7 @@ const NewAppartementForm = ({ locationId, onClose, onAppartementAdded }) => {
 
             </div>
             <div>
-                <label>Prix/Mois (€)</label>
+                <label>Loyer/Mois (€)</label>
                 <input
                     type="number"
                     value={price}
