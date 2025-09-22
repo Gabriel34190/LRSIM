@@ -217,69 +217,147 @@ const AppartementDetailsPage = () => {
             <div className="appartement-details">
                 {error && <p className="error">{error}</p>}
                 {appartement && (
-                    <div>
-                        <h1 
-                            className="appartement-title"
-                            onClick={() => handleFieldClick('name')}
-                        >
-                            {editingField === 'name' ? (
-                                <input type="text" value={tempValue} onChange={handleFieldChange} onBlur={saveField} autoFocus />
-                            ) : (
-                                appartement.name
+                    <div className="appartement-container">
+                        {/* En-tête de l'appartement */}
+                        <div className="appartement-header">
+                            <div className="header-main">
+                                <h1 
+                                    className="appartement-title"
+                                    onClick={() => handleFieldClick('name')}
+                                >
+                                    {editingField === 'name' ? (
+                                        <input type="text" value={tempValue} onChange={handleFieldChange} onBlur={saveField} autoFocus className="edit-field-input title-input" />
+                                    ) : (
+                                        appartement.name
+                                    )}
+                                </h1>
+                                <div className="appartement-location">
+                                    <span className="location-icon">📍</span>
+                                    <span 
+                                        onClick={() => handleFieldClick('Adress')}
+                                    >
+                                        {editingField === 'Adress' ? (
+                                            <textarea 
+                                                value={tempValue} 
+                                                onChange={handleFieldChange} 
+                                                onBlur={saveField} 
+                                                autoFocus 
+                                                className="edit-field-textarea location-textarea"
+                                                rows="2"
+                                                placeholder="Entrez l'adresse complète"
+                                            />
+                                        ) : (
+                                            appartement.Adress
+                                        )}
+                                    </span>
+                                </div>
+                                <div className="appartement-price">
+                                    <span className="price-label">Loyer :</span>
+                                    <span 
+                                        className="price-value"
+                                        onClick={() => handleFieldClick('price')}
+                                    >
+                                        {editingField === 'price' ? (
+                                            <input 
+                                                type="number" 
+                                                value={tempValue} 
+                                                onChange={handleFieldChange} 
+                                                onBlur={saveField} 
+                                                autoFocus 
+                                                className="edit-field-input price-input"
+                                                placeholder="Entrez le loyer en euros"
+                                            />
+                                        ) : (
+                                            `${appartement.price} €/mois`
+                                        )}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="header-actions">
+                                <button 
+                                    onClick={() => setIsEmailModalOpen(true)}
+                                    className="action-button email-button"
+                                >
+                                    <span className="button-icon">✉️</span>
+                                    Contacter
+                                </button>
+                                <button className="action-button phone-button">
+                                    <span className="button-icon">📞</span>
+                                    Téléphoner
+                                </button>
+                                <button className="action-button favorite-button">
+                                    <span className="button-icon">❤️</span>
+                                    Favoris
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Galerie d'images */}
+                        <div className="image-gallery">
+                            <div className="main-image-container">
+                                {selectedImage ? (
+                                    <img 
+                                        src={selectedImage} 
+                                        alt="Appartement" 
+                                        className="main-image"
+                                    />
+                                ) : appartement.images && appartement.images.length > 0 ? (
+                                    <img 
+                                        src={appartement.images[0]} 
+                                        alt="Appartement" 
+                                        className="main-image"
+                                    />
+                                ) : (
+                                    <div className="no-image-placeholder">
+                                        <span className="no-image-icon">🏠</span>
+                                        <p>Aucune image disponible</p>
+                                    </div>
+                                )}
+                                {appartement.images && appartement.images.length > 1 && (
+                                    <div className="image-counter">
+                                        {appartement.images.findIndex(img => img === selectedImage || (selectedImage === null && img === appartement.images[0])) + 1}/{appartement.images.length}
+                                    </div>
+                                )}
+                            </div>
+                            
+                            {appartement.images && appartement.images.length > 1 && (
+                                <div className="image-thumbnails">
+                                    {appartement.images.map((image, index) => (
+                                        <div 
+                                            key={index}
+                                            className={`thumbnail ${(selectedImage === image) || (selectedImage === null && index === 0) ? 'active' : ''}`}
+                                            onClick={() => setSelectedImage(image)}
+                                        >
+                                            <img src={image} alt={`Appartement ${index + 1}`} />
+                                        </div>
+                                    ))}
+                                </div>
                             )}
-                        </h1>
-
-                        <div className="appartement-section">
-                            <p onClick={() => handleFieldClick('description')}>
-                                {editingField === 'description' ? (
-                                    <textarea 
-                                        value={tempValue} 
-                                        onChange={handleFieldChange} 
-                                        onBlur={saveField} 
-                                        autoFocus 
-                                        className="edit-field-textarea"
-                                        rows="4"
-                                    />
-                                ) : (
-                                    appartement.description
-                                )}
-                            </p>
                         </div>
 
-                        <div className="appartement-section">
-                            <p onClick={() => handleFieldClick('price')}>
-                                {editingField === 'price' ? (
-                                    <input 
-                                        type="number" 
-                                        value={tempValue} 
-                                        onChange={handleFieldChange} 
-                                        onBlur={saveField} 
-                                        autoFocus 
-                                        className="edit-field-input"
-                                        placeholder="Entrez le loyer en euros"
-                                    />
-                                ) : (
-                                    `Loyer: ${appartement.price}`
-                                )}
-                            </p>
-                        </div>
-
-                        <div className="appartement-address">
-                            <p onClick={() => handleFieldClick('Adress')}>
-                                {editingField === 'Adress' ? (
-                                    <textarea 
-                                        value={tempValue} 
-                                        onChange={handleFieldChange} 
-                                        onBlur={saveField} 
-                                        autoFocus 
-                                        className="edit-field-textarea"
-                                        rows="2"
-                                        placeholder="Entrez l'adresse complète"
-                                    />
-                                ) : (
-                                    `Adresse: ${appartement.Adress}`
-                                )}
-                            </p>
+                        {/* Description de l'appartement */}
+                        <div className="appartement-description">
+                            <h2 className="description-title">Descriptif de cet appartement à louer</h2>
+                            <div className="description-content">
+                                <p 
+                                    onClick={() => handleFieldClick('description')}
+                                    className="description-text"
+                                >
+                                    {editingField === 'description' ? (
+                                        <textarea 
+                                            value={tempValue} 
+                                            onChange={handleFieldChange} 
+                                            onBlur={saveField} 
+                                            autoFocus 
+                                            className="edit-field-textarea description-textarea"
+                                            rows="6"
+                                            placeholder="Décrivez l'appartement, ses équipements, ses avantages..."
+                                        />
+                                    ) : (
+                                        appartement.description
+                                    )}
+                                </p>
+                            </div>
                         </div>
 
                         {user ? (
@@ -396,13 +474,6 @@ const AppartementDetailsPage = () => {
                             </div>
                         )}
 
-                        <button 
-                            onClick={() => setIsEmailModalOpen(true)}
-                            className="email-button"
-                        >
-                            <span className="email-icon">✉️</span>
-                            Envoyer un email
-                        </button>
 
                         {isEmailModalOpen && (
                             <div className="email-modal">
