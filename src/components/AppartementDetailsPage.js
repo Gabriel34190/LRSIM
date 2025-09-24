@@ -23,6 +23,9 @@ const AppartementDetailsPage = () => {
     const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
     const [clientEmail, setClientEmail] = useState('');
     const [customMessage, setCustomMessage] = useState('');
+    
+    // États pour les spécifications de l'appartement
+    const [apartmentSpecs, setApartmentSpecs] = useState({});
     const [contractEndDate, setContractEndDate] = useState('');
 
     useEffect(() => {
@@ -31,6 +34,29 @@ const AppartementDetailsPage = () => {
         });
         return () => unsubscribe();
     }, []);
+
+    // Initialiser les spécifications quand l'appartement est chargé
+    useEffect(() => {
+        if (appartement) {
+            setApartmentSpecs({
+                surface: appartement.surface || '',
+                rooms: appartement.rooms || '',
+                bedrooms: appartement.bedrooms || '',
+                bathrooms: appartement.bathrooms || '',
+                toilets: appartement.toilets || '',
+                floor: appartement.floor || '',
+                constructionYear: appartement.constructionYear || '',
+                heating: appartement.heating || '',
+                charges: appartement.charges || '',
+                dpeDate: appartement.dpeDate || '',
+                orientation: appartement.orientation || '',
+                balcony: appartement.balcony || '',
+                terrace: appartement.terrace || '',
+                cellar: appartement.cellar || '',
+                elevator: appartement.elevator || ''
+            });
+        }
+    }, [appartement]);
 
     useEffect(() => {
         const fetchAppartement = async () => {
@@ -135,6 +161,37 @@ const AppartementDetailsPage = () => {
         }
     };
 
+    const handleSpecFieldClick = (fieldName) => {
+        if (!user) return;
+        setEditingField(fieldName);
+        setTempValue(apartmentSpecs[fieldName] || '');
+    };
+
+    const handleSpecFieldChange = (e) => {
+        setTempValue(e.target.value);
+    };
+
+    const saveSpecField = async () => {
+        if (!user) return;
+        try {
+            const docRef = doc(db, 'locations', locationId, 'appartements', appartementId);
+            await updateDoc(docRef, { 
+                [editingField]: tempValue 
+            });
+            
+            // Mettre à jour l'état local
+            setApartmentSpecs(prev => ({
+                ...prev,
+                [editingField]: tempValue
+            }));
+            
+            setEditingField(null);
+            setTempValue('');
+        } catch (err) {
+            console.error('Erreur lors de la mise à jour:', err);
+        }
+    };
+
     const handleSendEmail = (e) => {
         e.preventDefault();
         if (!clientEmail) {
@@ -221,16 +278,16 @@ const AppartementDetailsPage = () => {
                         {/* En-tête de l'appartement */}
                         <div className="appartement-header">
                             <div className="header-main">
-                                <h1 
-                                    className="appartement-title"
-                                    onClick={() => handleFieldClick('name')}
-                                >
-                                    {editingField === 'name' ? (
+                        <h1 
+                            className="appartement-title"
+                            onClick={() => handleFieldClick('name')}
+                        >
+                            {editingField === 'name' ? (
                                         <input type="text" value={tempValue} onChange={handleFieldChange} onBlur={saveField} autoFocus className="edit-field-input title-input" />
-                                    ) : (
-                                        appartement.name
-                                    )}
-                                </h1>
+                            ) : (
+                                appartement.name
+                            )}
+                        </h1>
                                 <div className="appartement-location">
                                     <span className="location-icon">📍</span>
                                     <span 
@@ -355,8 +412,335 @@ const AppartementDetailsPage = () => {
                                         />
                                     ) : (
                                         appartement.description
-                                    )}
-                                </p>
+                                )}
+                            </p>
+                            </div>
+                        </div>
+
+                        {/* Spécifications de l'appartement */}
+                        <div className="apartment-specifications">
+                            <h2 className="specs-title">À propos de cet appartement à louer</h2>
+                            <div className="specs-table">
+                                <div className="specs-column">
+                                    <div className="spec-row">
+                                        <span className="spec-label">Surface :</span>
+                                        <span 
+                                            className={`spec-value ${!apartmentSpecs.surface ? 'empty' : ''}`}
+                                            onClick={() => handleSpecFieldClick('surface')}
+                                        >
+                                            {editingField === 'surface' ? (
+                                                <input 
+                                                    type="text" 
+                                                    value={tempValue} 
+                                                    onChange={handleSpecFieldChange} 
+                                                    onBlur={saveSpecField} 
+                                                    autoFocus 
+                                                    className="spec-input"
+                                                    placeholder="Ex: 55,65 m²"
+                                                />
+                                            ) : (
+                                                apartmentSpecs.surface || 'Non renseigné'
+                                            )}
+                                        </span>
+                                    </div>
+                                    <div className="spec-row">
+                                        <span className="spec-label">Pièces :</span>
+                                        <span 
+                                            className={`spec-value ${!apartmentSpecs.rooms ? 'empty' : ''}`}
+                                            onClick={() => handleSpecFieldClick('rooms')}
+                                        >
+                                            {editingField === 'rooms' ? (
+                                                <input 
+                                                    type="text" 
+                                                    value={tempValue} 
+                                                    onChange={handleSpecFieldChange} 
+                                                    onBlur={saveSpecField} 
+                                                    autoFocus 
+                                                    className="spec-input"
+                                                    placeholder="Ex: 3 pièces"
+                                                />
+                                            ) : (
+                                                apartmentSpecs.rooms || 'Non renseigné'
+                                            )}
+                                        </span>
+                                    </div>
+                                    <div className="spec-row">
+                                        <span className="spec-label">Chambres :</span>
+                                        <span 
+                                            className={`spec-value ${!apartmentSpecs.bedrooms ? 'empty' : ''}`}
+                                            onClick={() => handleSpecFieldClick('bedrooms')}
+                                        >
+                                            {editingField === 'bedrooms' ? (
+                                                <input 
+                                                    type="text" 
+                                                    value={tempValue} 
+                                                    onChange={handleSpecFieldChange} 
+                                                    onBlur={saveSpecField} 
+                                                    autoFocus 
+                                                    className="spec-input"
+                                                    placeholder="Ex: 2 chambres"
+                                                />
+                                            ) : (
+                                                apartmentSpecs.bedrooms || 'Non renseigné'
+                                            )}
+                                        </span>
+                                    </div>
+                                    <div className="spec-row">
+                                        <span className="spec-label">Salles de bain :</span>
+                                        <span 
+                                            className={`spec-value ${!apartmentSpecs.bathrooms ? 'empty' : ''}`}
+                                            onClick={() => handleSpecFieldClick('bathrooms')}
+                                        >
+                                            {editingField === 'bathrooms' ? (
+                                                <input 
+                                                    type="text" 
+                                                    value={tempValue} 
+                                                    onChange={handleSpecFieldChange} 
+                                                    onBlur={saveSpecField} 
+                                                    autoFocus 
+                                                    className="spec-input"
+                                                    placeholder="Ex: 1 salle de bain"
+                                                />
+                                            ) : (
+                                                apartmentSpecs.bathrooms || 'Non renseigné'
+                                            )}
+                                        </span>
+                                    </div>
+                                    <div className="spec-row">
+                                        <span className="spec-label">WC :</span>
+                                        <span 
+                                            className={`spec-value ${!apartmentSpecs.toilets ? 'empty' : ''}`}
+                                            onClick={() => handleSpecFieldClick('toilets')}
+                                        >
+                                            {editingField === 'toilets' ? (
+                                                <input 
+                                                    type="text" 
+                                                    value={tempValue} 
+                                                    onChange={handleSpecFieldChange} 
+                                                    onBlur={saveSpecField} 
+                                                    autoFocus 
+                                                    className="spec-input"
+                                                    placeholder="Ex: 1 WC"
+                                                />
+                                            ) : (
+                                                apartmentSpecs.toilets || 'Non renseigné'
+                                            )}
+                                        </span>
+                                    </div>
+                                    <div className="spec-row">
+                                        <span className="spec-label">Étage :</span>
+                                        <span 
+                                            className={`spec-value ${!apartmentSpecs.floor ? 'empty' : ''}`}
+                                            onClick={() => handleSpecFieldClick('floor')}
+                                        >
+                                            {editingField === 'floor' ? (
+                                                <input 
+                                                    type="text" 
+                                                    value={tempValue} 
+                                                    onChange={handleSpecFieldChange} 
+                                                    onBlur={saveSpecField} 
+                                                    autoFocus 
+                                                    className="spec-input"
+                                                    placeholder="Ex: Rez-de-chaussée"
+                                                />
+                                            ) : (
+                                                apartmentSpecs.floor || 'Non renseigné'
+                                            )}
+                                        </span>
+                                    </div>
+                                    <div className="spec-row">
+                                        <span className="spec-label">Année de construction :</span>
+                                        <span 
+                                            className={`spec-value ${!apartmentSpecs.constructionYear ? 'empty' : ''}`}
+                                            onClick={() => handleSpecFieldClick('constructionYear')}
+                                        >
+                                            {editingField === 'constructionYear' ? (
+                                                <input 
+                                                    type="text" 
+                                                    value={tempValue} 
+                                                    onChange={handleSpecFieldChange} 
+                                                    onBlur={saveSpecField} 
+                                                    autoFocus 
+                                                    className="spec-input"
+                                                    placeholder="Ex: Construit en 1975"
+                                                />
+                                            ) : (
+                                                apartmentSpecs.constructionYear || 'Non renseigné'
+                                            )}
+                                        </span>
+                                    </div>
+                                    <div className="spec-row">
+                                        <span className="spec-label">Chauffage :</span>
+                                        <span 
+                                            className={`spec-value ${!apartmentSpecs.heating ? 'empty' : ''}`}
+                                            onClick={() => handleSpecFieldClick('heating')}
+                                        >
+                                            {editingField === 'heating' ? (
+                                                <input 
+                                                    type="text" 
+                                                    value={tempValue} 
+                                                    onChange={handleSpecFieldChange} 
+                                                    onBlur={saveSpecField} 
+                                                    autoFocus 
+                                                    className="spec-input"
+                                                    placeholder="Ex: Chauffage : radiateur gaz collectif"
+                                                />
+                                            ) : (
+                                                apartmentSpecs.heating || 'Non renseigné'
+                                            )}
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <div className="specs-column">
+                                    <div className="spec-row">
+                                        <span className="spec-label">Charges :</span>
+                                        <span 
+                                            className={`spec-value ${!apartmentSpecs.charges ? 'empty' : ''}`}
+                                            onClick={() => handleSpecFieldClick('charges')}
+                                        >
+                                            {editingField === 'charges' ? (
+                                                <input 
+                                                    type="text" 
+                                                    value={tempValue} 
+                                                    onChange={handleSpecFieldChange} 
+                                                    onBlur={saveSpecField} 
+                                                    autoFocus 
+                                                    className="spec-input"
+                                                    placeholder="Ex: 211 € par mois de provisions sur charges"
+                                                />
+                                            ) : (
+                                                apartmentSpecs.charges || 'Non renseigné'
+                                            )}
+                                        </span>
+                                    </div>
+                                    <div className="spec-row">
+                                        <span className="spec-label">Date DPE :</span>
+                                        <span 
+                                            className={`spec-value ${!apartmentSpecs.dpeDate ? 'empty' : ''}`}
+                                            onClick={() => handleSpecFieldClick('dpeDate')}
+                                        >
+                                            {editingField === 'dpeDate' ? (
+                                                <input 
+                                                    type="text" 
+                                                    value={tempValue} 
+                                                    onChange={handleSpecFieldChange} 
+                                                    onBlur={saveSpecField} 
+                                                    autoFocus 
+                                                    className="spec-input"
+                                                    placeholder="Ex: Date de réalisation du DPE : 9 avril 2024"
+                                                />
+                                            ) : (
+                                                apartmentSpecs.dpeDate || 'Non renseigné'
+                                            )}
+                                        </span>
+                                    </div>
+                                    <div className="spec-row">
+                                        <span className="spec-label">Orientation :</span>
+                                        <span 
+                                            className={`spec-value ${!apartmentSpecs.orientation ? 'empty' : ''}`}
+                                            onClick={() => handleSpecFieldClick('orientation')}
+                                        >
+                                            {editingField === 'orientation' ? (
+                                                <input 
+                                                    type="text" 
+                                                    value={tempValue} 
+                                                    onChange={handleSpecFieldChange} 
+                                                    onBlur={saveSpecField} 
+                                                    autoFocus 
+                                                    className="spec-input"
+                                                    placeholder="Ex: Exposé Sud"
+                                                />
+                                            ) : (
+                                                apartmentSpecs.orientation || 'Non renseigné'
+                                            )}
+                                        </span>
+                                    </div>
+                                    <div className="spec-row">
+                                        <span className="spec-label">Balcon :</span>
+                                        <span 
+                                            className={`spec-value ${!apartmentSpecs.balcony ? 'empty' : ''}`}
+                                            onClick={() => handleSpecFieldClick('balcony')}
+                                        >
+                                            {editingField === 'balcony' ? (
+                                                <input 
+                                                    type="text" 
+                                                    value={tempValue} 
+                                                    onChange={handleSpecFieldChange} 
+                                                    onBlur={saveSpecField} 
+                                                    autoFocus 
+                                                    className="spec-input"
+                                                    placeholder="Ex: Balcon de 14 m²"
+                                                />
+                                            ) : (
+                                                apartmentSpecs.balcony || 'Non renseigné'
+                                            )}
+                                        </span>
+                                    </div>
+                                    <div className="spec-row">
+                                        <span className="spec-label">Terrasse :</span>
+                                        <span 
+                                            className={`spec-value ${!apartmentSpecs.terrace ? 'empty' : ''}`}
+                                            onClick={() => handleSpecFieldClick('terrace')}
+                                        >
+                                            {editingField === 'terrace' ? (
+                                                <input 
+                                                    type="text" 
+                                                    value={tempValue} 
+                                                    onChange={handleSpecFieldChange} 
+                                                    onBlur={saveSpecField} 
+                                                    autoFocus 
+                                                    className="spec-input"
+                                                    placeholder="Ex: 1 terrasse"
+                                                />
+                                            ) : (
+                                                apartmentSpecs.terrace || 'Non renseigné'
+                                            )}
+                                        </span>
+                                    </div>
+                                    <div className="spec-row">
+                                        <span className="spec-label">Cave :</span>
+                                        <span 
+                                            className={`spec-value ${!apartmentSpecs.cellar ? 'empty' : ''}`}
+                                            onClick={() => handleSpecFieldClick('cellar')}
+                                        >
+                                            {editingField === 'cellar' ? (
+                                                <input 
+                                                    type="text" 
+                                                    value={tempValue} 
+                                                    onChange={handleSpecFieldChange} 
+                                                    onBlur={saveSpecField} 
+                                                    autoFocus 
+                                                    className="spec-input"
+                                                    placeholder="Ex: Cave"
+                                                />
+                                            ) : (
+                                                apartmentSpecs.cellar || 'Non renseigné'
+                                            )}
+                                        </span>
+                                    </div>
+                                    <div className="spec-row">
+                                        <span className="spec-label">Ascenseur :</span>
+                                        <span 
+                                            className={`spec-value ${!apartmentSpecs.elevator ? 'empty' : ''}`}
+                                            onClick={() => handleSpecFieldClick('elevator')}
+                                        >
+                                            {editingField === 'elevator' ? (
+                                                <input 
+                                                    type="text" 
+                                                    value={tempValue} 
+                                                    onChange={handleSpecFieldChange} 
+                                                    onBlur={saveSpecField} 
+                                                    autoFocus 
+                                                    className="spec-input"
+                                                    placeholder="Ex: Ascenseur"
+                                                />
+                                            ) : (
+                                                apartmentSpecs.elevator || 'Non renseigné'
+                                            )}
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -468,9 +852,31 @@ const AppartementDetailsPage = () => {
                         </div>
 
                         {user && (
-                            <div className="appartement-section">
-                                <input type="file" accept="image/*" onChange={handleImageChange} />
-                                <button onClick={uploadImage}>Ajouter une image</button>
+                            <div className="image-upload-section">
+                                <div className="upload-container">
+                                    <div className="file-input-wrapper">
+                                        <input 
+                                            type="file" 
+                                            accept="image/*" 
+                                            onChange={handleImageChange} 
+                                            className="file-input-hidden"
+                                            id="image-upload"
+                                        />
+                                        <label htmlFor="image-upload" className="browse-button">
+                                            Parcourir...
+                                        </label>
+                                        <span className="file-status">
+                                            {image ? image.name : "Aucun fichier sélectionné."}
+                                        </span>
+                                    </div>
+                                    <button 
+                                        onClick={uploadImage}
+                                        className="upload-button"
+                                        disabled={!image}
+                                    >
+                                        Ajouter une photo
+                                    </button>
+                                </div>
                             </div>
                         )}
 
