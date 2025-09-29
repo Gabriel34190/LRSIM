@@ -593,39 +593,194 @@
     font-weight: 600;
 }
 
-.image-thumbnails {
+/* Galerie de vignettes moderne */
+.modern-thumbnail-gallery {
     display: flex;
-    gap: 0.5vw;
-    padding: 1vw;
-    background: #f8f9fa;
+    gap: 0.8vw;
+    padding: 1.5vw;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     overflow-x: auto;
+    border-radius: 0 0 1vw 1vw;
+    box-shadow: inset 0 0.2vw 0.5vw rgba(0, 0, 0, 0.05);
 }
 
-.thumbnail {
+.modern-thumbnail {
+    position: relative;
     flex-shrink: 0;
-    width: 8vw;
-    height: 6vw;
-    border-radius: 0.3vw;
+    width: 10vw;
+    height: 8vw;
+    border-radius: 0.5vw;
     overflow: hidden;
     cursor: pointer;
-    border: 0.2vw solid transparent;
-    transition: all 0.3s ease;
+    border: 0.15vw solid transparent;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0.2vw 0.8vw rgba(0, 0, 0, 0.1);
 }
 
-.thumbnail:hover {
+.modern-thumbnail:hover {
     border-color: #007bff;
-    transform: scale(1.05);
+    transform: translateY(-0.3vw) scale(1.05);
+    box-shadow: 0 0.5vw 1.5vw rgba(0, 123, 255, 0.3);
 }
 
-.thumbnail.active {
+.modern-thumbnail.active {
     border-color: #007bff;
-    box-shadow: 0 0 0 0.1vw rgba(0, 123, 255, 0.3);
+    box-shadow: 0 0 0 0.2vw rgba(0, 123, 255, 0.4);
+    transform: translateY(-0.2vw);
 }
 
-.thumbnail img {
+.modern-thumbnail img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.modern-thumbnail:hover img {
+    transform: scale(1.1);
+}
+
+.thumbnail-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.1) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 0.5vw;
+}
+
+.modern-thumbnail:hover .thumbnail-overlay {
+    opacity: 1;
+}
+
+.image-number {
+    background: rgba(255, 255, 255, 0.9);
+    color: #212529;
+    font-size: 0.8vw;
+    font-weight: 600;
+    padding: 0.2vw 0.5vw;
+    border-radius: 0.3vw;
+    backdrop-filter: blur(0.2vw);
+}
+
+.delete-thumbnail-btn {
+    position: absolute;
+    top: 0.5vw;
+    right: 0.5vw;
+    width: 1.8vw;
+    height: 1.8vw;
+    background: rgba(220, 53, 69, 0.9);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(0.2vw);
+}
+
+.delete-thumbnail-btn:hover {
+    background: rgba(220, 53, 69, 1);
+    transform: scale(1.1);
+    box-shadow: 0 0.2vw 0.8vw rgba(220, 53, 69, 0.4);
+}
+
+.delete-icon {
+    color: white;
+    font-size: 1.2vw;
+    font-weight: bold;
+    line-height: 1;
+}
+
+/* Images uploadées modernes */
+.uploaded-image-item {
+    display: inline-block;
+    margin: 0.5vw;
+}
+
+.uploaded-image-wrapper {
+    position: relative;
+    width: 12vw;
+    height: 10vw;
+    border-radius: 0.5vw;
+    overflow: hidden;
+    box-shadow: 0 0.3vw 1vw rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.uploaded-image-wrapper:hover {
+    transform: translateY(-0.3vw);
+    box-shadow: 0 0.5vw 1.5vw rgba(0, 0, 0, 0.2);
+}
+
+.uploaded-thumbnail {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.uploaded-image-wrapper:hover .uploaded-thumbnail {
+    transform: scale(1.05);
+}
+
+.delete-uploaded-btn {
+    position: absolute;
+    top: 0.5vw;
+    right: 0.5vw;
+    width: 2vw;
+    height: 2vw;
+    background: rgba(220, 53, 69, 0.9);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    opacity: 0;
+    transform: scale(0.8);
+}
+
+.uploaded-image-wrapper:hover .delete-uploaded-btn {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.delete-uploaded-btn:hover {
+    background: rgba(220, 53, 69, 1);
+    transform: scale(1.1);
+    box-shadow: 0 0.2vw 0.8vw rgba(220, 53, 69, 0.4);
+}
+
+.image-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+    padding: 1vw 0.5vw 0.5vw;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.uploaded-image-wrapper:hover .image-info {
+    opacity: 1;
+}
+
+.image-index {
+    color: white;
+    font-size: 0.8vw;
+    font-weight: 500;
+    text-shadow: 0 0.1vw 0.2vw rgba(0, 0, 0, 0.5);
 }
 
 /* Description de l'appartement */

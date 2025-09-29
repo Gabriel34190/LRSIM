@@ -377,15 +377,30 @@ const AppartementDetailsPage = () => {
                                 )}
                             </div>
                             
-                            {appartement.images && appartement.images.length > 1 && (
-                                <div className="image-thumbnails">
+                            {appartement.images && appartement.images.length > 0 && (
+                                <div className="modern-thumbnail-gallery">
                                     {appartement.images.map((image, index) => (
                                         <div 
                                             key={index}
-                                            className={`thumbnail ${(selectedImage === image) || (selectedImage === null && index === 0) ? 'active' : ''}`}
+                                            className={`modern-thumbnail ${(selectedImage === image) || (selectedImage === null && index === 0) ? 'active' : ''}`}
                                             onClick={() => setSelectedImage(image)}
                                         >
                                             <img src={image} alt={`Appartement ${index + 1}`} />
+                                            <div className="thumbnail-overlay">
+                                                <span className="image-number">{index + 1}</span>
+                                                {user && (
+                                                    <button
+                                                        className="delete-thumbnail-btn"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            deleteImage(image);
+                                                        }}
+                                                        title="Supprimer cette photo"
+                                                    >
+                                                        <span className="delete-icon">×</span>
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -831,24 +846,30 @@ const AppartementDetailsPage = () => {
                         )}
 
                         <div className="image-gallery">
-                            {imageURLs.map((url, index) => (
-                                <div key={index} className="image-container">
+                        {imageURLs.map((url, index) => (
+                            <div key={index} className="uploaded-image-item">
+                                <div className="uploaded-image-wrapper">
                                     <img
                                         src={url}
                                         alt="Appartement"
-                                        className="thumbnail"
+                                        className="uploaded-thumbnail"
                                         onClick={() => setSelectedImage(url)}
                                     />
                                     {user && (
                                         <button
-                                            className="delete-btn"
+                                            className="delete-uploaded-btn"
                                             onClick={() => deleteImage(url)}
+                                            title="Supprimer cette photo"
                                         >
-                                            &#10005;
+                                            <span className="delete-icon">×</span>
                                         </button>
                                     )}
+                                    <div className="image-info">
+                                        <span className="image-index">Photo {index + 1}</span>
+                                    </div>
                                 </div>
-                            ))}
+                            </div>
+                        ))}
                         </div>
 
                         {user && (
