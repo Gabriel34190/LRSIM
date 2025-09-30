@@ -17,54 +17,39 @@
 
 .home-container {
     text-align: center;
-    padding: var(--padding-base);
+    padding: clamp(16px, 3vw, 32px);
     position: relative;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 .home-title {
-    font-size: var(--font-size-title);
-    font-weight: bold;
+    font-size: clamp(1.5rem, 2.5vw, 2.25rem);
+    font-weight: 700;
     color: var(--text-color);
-    margin-bottom: 2vw;
+    margin-bottom: 1.5rem;
 }
 
 
-.location-card:hover {
-    transform: scale(1.05);
-}
+.hover-lift { transition: transform 220ms ease, box-shadow 220ms ease; }
+.hover-lift:hover { transform: translateY(-4px); box-shadow: var(--box-shadow-lg); }
 
-.location-card img {
-    width: 500%;
-    height: 520%;
-    object-fit: cover; /* L'image remplit l'espace en respectant le ratio */
-    border-radius: var(--border-radius); /* Bordure arrondie pour l'image aussi */
-    z-index: 0;
-}
-
-
-.location-card p {
-    font-size: var(--font-size-card-text);
-    font-weight: bold;
-    background-color: white;
-    margin: 0;
-    padding: 1vw;
-    height: 10%; /* Prend les 30% restants du carré */
-    border-radius: 0 0 var(--border-radius) var(--border-radius);
-    color: var(--text-color);
-    display: flex;
-    align-items: center; /* Centre le texte verticalement */
-    justify-content: center; /* Centre le texte horizontalement */
-    text-align: center;
+.location-image-wrap img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    border-radius: var(--border-radius);
 }
 
 
-.navbar {
-    background-color: var(--navbar-bg);
-    padding: 1.5vw 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.location-title {
+    font-size: 1.125rem;
+    margin: 0.5rem 0 0;
 }
+
+
+/* Ancienne navbar masquée (remplacée par Navbar.css) */
+.navbar { display: none; }
 
 .navbar a {
     color: white;
@@ -86,54 +71,51 @@
 }
 
 /* Taille du logo dans toutes les navbars utilisant Home.css */
-.logo img {
-    width: 5vw;
-    height: 5vw;
-    border-radius: 50%;
-}
+.logo img { width: 40px; height: 40px; border-radius: 50%; }
 
 .status-label {
     font-size: 0.8rem;
     color: var(--status-label-color);
     background-color: var(--status-label-bg);
-    padding: 0.5vw 1vw;
+    padding: 6px 10px;
     border-radius: var(--border-radius);
     position: absolute;
-    top: 5vw;
-    right: 2vw;
-    box-shadow: 0 0.2vw 0.5vw var(--shadow-color);
+    top: 76px;
+    right: 16px;
+    box-shadow: 0 6px 12px var(--shadow-color);
 }
 
 .add-location-button {
-    background-color: var(--add-location-bg);
+    background: linear-gradient(135deg, #2d7dff, #1a60e6);
     color: white;
     border: none;
-    border-radius: var(--border-radius);
-    padding: var(--button-padding);
+    border-radius: 999px;
+    padding: 0.75rem 1.25rem;
     cursor: pointer;
-    margin-bottom: 2vw;
+    margin-bottom: 1.25rem;
     font-size: 1rem;
-    font-weight: bold;
-    display: block; /* Remplacer 'inline-block' par 'block' */
-    margin-left: auto; /* Centre horizontalement */
-    margin-right: auto; /* Centre horizontalement */
+    font-weight: 600;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    box-shadow: var(--box-shadow);
 }
 
 .delete-button {
     position: absolute;
-    top: 1vw; /* Distance relative du haut */
-    right: 1vw; /* Distance relative de la droite */
+    top: 10px;
+    right: 10px;
     background: var(--delete-btn-bg);
     color: white;
     border: none;
     border-radius: 50%;
-    width: 2vw; /* Largeur relative à l'écran */
-    height: 2vw; /* Hauteur relative à l'écran */
+    width: 32px;
+    height: 32px;
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
-    font-size: 1rem; /* Taille de police */
+    font-size: 0.875rem;
     transition: transform 0.3s ease;
 }
 
@@ -164,27 +146,25 @@
     }
 }
 
-.locations-container {
-    display: flex;
-    flex-wrap: wrap; /* Permet de passer à la ligne si pas assez de place */
-    justify-content: center; /* Centre les cartes horizontalement */
-    gap: 2vw; /* Espace entre les cartes */
-}
+.locations-container { display: contents; }
 
-.location-card {
-    width: 300px; /* Taille raisonnable */
-    height: auto; /* Laisse la hauteur s'ajuster automatiquement */
-    max-width: 90%; /* Empêche d'être trop large sur petits écrans */
-}
+.location-card { width: 100%; max-width: 360px; }
 
 .location-card {
     position: relative;
-    width: 300vh; /* Largeur fixe */
-    height: 300 vw; /* Hauteur égale à la largeur pour un carré */
-    margin: 1vw auto; /* Centrer horizontalement avec auto */
+    margin: 0 auto;
     cursor: pointer;
     border-radius: var(--border-radius);
-    box-shadow: 0 0.4vw 0.8vw var(--shadow-color);
-    transition: transform 0.3s ease;
-    border: 2px solid #ccc; /* Bordure pour mieux visualiser */
+    box-shadow: var(--box-shadow);
+    background: #fff;
+    overflow: hidden;
+}
+
+.location-media { position: relative; }
+.location-body { padding: 0.75rem; text-align: left; }
+
+.locations-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1rem;
 }

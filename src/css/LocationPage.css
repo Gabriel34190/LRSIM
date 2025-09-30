@@ -67,36 +67,47 @@
 /* Style de chaque carte d'appartement */
 .appartement-card {
     background: white;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 15px;
-    width: 300px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius);
+    width: 320px;
+    box-shadow: var(--box-shadow);
     cursor: pointer;
-    transition: transform 0.2s ease-in-out;
-    position: relative; /* Permet de positionner le bouton de suppression par rapport à la carte */
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    position: relative;
+    overflow: hidden;
 }
 
 .appartement-card:hover {
     transform: scale(1.05);
 }
 
-.appartement-card img {
+.card-media img {
     width: 100%;
-    height: 150px;
+    height: 180px;
     object-fit: cover;
-    border-radius: 8px;
 }
+.card-media { position: relative; }
+.media-overlay { position: absolute; top: 8px; left: 8px; right: 8px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; }
+.overlay-left { justify-self: start; }
+.overlay-center { justify-self: center; }
+.overlay-right { justify-self: end; }
+.switch.small { transform: scale(0.8); transform-origin: left top; }
+.delete-button.overlay { right: 12px; top: 12px; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
 
-.appartement-card h2 {
-    font-size: 18px;
-    margin: 10px 0;
-}
+.card-body { padding: 12px 14px 16px; }
+.card-title-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.card-title { font-size: 1.1rem; margin: 0 0 6px 0; }
+.card-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.chip { background: var(--gray-100); border: 1px solid var(--gray-200); padding: 2px 8px; border-radius: 999px; font-size: .8rem; }
+.description-clamp { color: var(--gray-700); font-size: .9rem; display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; min-height: 3.6em; }
+.card-row { margin-top: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.price { font-weight: 700; color: #1a60e6; }
+.address { color: var(--gray-600); font-size: .85rem; text-align: right; }
 
-.appartement-card p {
-    font-size: 14px;
-    color: #555;
-}
+.card-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px 0; }
+.badge { font-size: .75rem; padding: 4px 8px; border-radius: 6px; border: 1px solid transparent; }
+.badge-success { background: #e8fbef; color: #1f9d55; border-color: #c7f5d9; }
+.badge-danger { background: #ffeaea; color: #c0392b; border-color: #ffd4d4; }
 
 /* Bouton de suppression spécifique dans la carte d'appartement */
 .appartement-card .delete-button {
@@ -105,7 +116,7 @@
     color: red;
     font-size: 20px;
     cursor: pointer;
-    position: absolute; /* Positionné en haut à droite de la carte */
+    position: absolute;
     top: 10px;
     right: 10px;
 }

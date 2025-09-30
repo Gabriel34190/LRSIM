@@ -4,7 +4,7 @@ import { auth, db } from './firebase-config'; // Importation de Firestore
 import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore'; // Firestore
 import '../css/Home.css';
 import NewLocationForm from './NewLocationForm';
-import logo from '../images/Lrsim_logo.png'
+import Navbar from './Navbar';
 import montpellierFallback from '../images/Montpellier.jpeg'
 
 const Home = () => {
@@ -67,15 +67,7 @@ const Home = () => {
         fetchLocations();
     }, []);
 
-    const handleProprietairesClick = (e) => {
-        e.preventDefault();
-        navigate('/proprietaires');
-    };
-
-    const handleConnexionClick = (e) => {
-        e.preventDefault();
-        navigate('/connexion');
-    };
+    // Navigation handled directly by Navbar links
 
     const toggleForm = () => {
         setShowForm(!showForm);
@@ -115,83 +107,51 @@ const Home = () => {
 
     return (
         <div>
-            <div className="navbar">
-            <div className="logo">
-                <img src={logo} alt="Logo" />
-            </div>
-
-                <div className="status-label">{user ? 'Connected' : 'Not Connected'}</div>
-
-                <div className="nav-links">
-                    <a
-                        href="/proprietaires"
-                        onClick={handleProprietairesClick}
-                        className="nav-link"
-                    >
-                        Propriétaires
-                    </a>
-                    {user ? (
-                        <a
-                            href="/"
-                            onClick={(e) => {
-                                e.preventDefault();
-                                handleLogout();
-                            }}
-                            className="nav-link"
-                        >
-                            Déconnexion
-                        </a>
-                    ) : (
-                        <a
-                            href="/connexion"
-                            onClick={handleConnexionClick}
-                            className="nav-link"
-                        >
-                            Connexion
-                        </a>
-                    )}
-                </div>
-            </div>
-
-            <div className="home-container">
+            <Navbar isAuthenticated={!!user} onLogout={handleLogout} />
+            <div className="home-container fade-in">
                 <h1 className="home-title">Trouvez un logement !</h1>
 
                 {/* Liste des lieux */}
-                <div className="locations-list">
+                <div className="locations-grid">
                     {locations.length > 0 ? (
                         locations.map((location) => (
                             <div
                                 key={location.id}
-                                className="location-card"
+                                className="location-card hover-lift"
                                 onClick={() => handleLocationClick(location.id)}
                             >
-                                <h2>{location.name}</h2>
-                                {getDisplayImageUrl(location) && (
-                                    <img
-                                        src={getDisplayImageUrl(location)}
-                                        alt={location.name}
-                                        style={{ width: '250px', height: '200px', objectFit: 'cover', borderRadius: '8px' }}
-                                        onError={(e) => handleCardImgError(e, location)}
-                                    />
-                                )}
-                                {!getDisplayImageUrl(location) && (
-                                    <img
-                                        src={montpellierFallback}
-                                        alt={location.name}
-                                        style={{ width: '250px', height: '200px', objectFit: 'cover', borderRadius: '8px' }}
-                                    />
-                                )}
-                                {user && (  // Affichage du bouton de suppression pour les utilisateurs connectés
-                                    <button
-                                        className="delete-button"
-                                        onClick={(e) => {
-                                            e.stopPropagation(); // Empêche la redirection lors du clic
-                                            handleDeleteLocation(location.id);
-                                        }}
-                                    >
-                                        ✖
-                                    </button>
-                                )}
+                                <div className="location-media">
+                                    <div className="location-image-wrap">
+                                        {getDisplayImageUrl(location) && (
+                                            <img
+                                                src={getDisplayImageUrl(location)}
+                                                alt={location.name}
+                                                onError={(e) => handleCardImgError(e, location)}
+                                            />
+                                        )}
+                                        {!getDisplayImageUrl(location) && (
+                                            <img
+                                                src={montpellierFallback}
+                                                alt={location.name}
+                                            />
+                                        )}
+                                    </div>
+                                    {user && (
+                                        <button
+                                            className="delete-button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDeleteLocation(location.id);
+                                            }}
+                                            aria-label={`Supprimer ${location.name}`}
+                                        >
+                                            ✖
+                                        </button>
+                                    )}
+                                </div>
+                                <div className="location-body">
+                                    <h2 className="location-title">{location.name}</h2>
+                                </div>
                             </div>
                         ))
                     ) : (
@@ -203,11 +163,11 @@ const Home = () => {
             {/* Affichage du bouton pour ajouter un nouveau lieu uniquement si l'utilisateur est connecté */}
             {user && (
                 <div className="button-addlocation">
-                    <button className="add-location-button" onClick={toggleForm}>
+                    <button className="add-location-button hover-lift" onClick={toggleForm}>
                         Ajouter un nouveau lieu
                     </button>
                     {showForm && (
-                        <div className="new-location-form">
+                        <div className="new-location-form fade-in">
                             <NewLocationForm onClose={toggleForm} onLocationAdded={handleLocationAdded} />
                         </div>
                     )}

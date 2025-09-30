@@ -4,7 +4,7 @@ import { auth } from './firebase-config';
 import { useNavigate } from 'react-router-dom';
 import '../css/Connexion.css';
 import '../css/Home.css';
-import logo from '../images/Lrsim_logo.png';
+import Navbar from './Navbar';
 
 function Connexion() {
   const [email, setEmail] = useState("");
@@ -30,19 +30,10 @@ function Connexion() {
 
   return (
     <div>
-      <div className="navbar">
-        <div className="logo">
-          <img src={logo} alt="Logo" />
-        </div>
-        <div className="nav-links">
-          <a href="/" className="nav-link">Accueil</a>
-          <a href="/proprietaires" className="nav-link">Propriétaires</a>
-          <a href="/connexion" className="nav-link">Connexion</a>
-        </div>
-      </div>
+      <Navbar isAuthenticated={!!auth.currentUser} onLogout={() => auth.signOut()} />
 
       {/* Contenu de la page de connexion */}
-      <div className="login-container">
+      <div className="login-container fade-in">
         <h1 className="login-title">Connexion</h1>
         <form className="login-form" onSubmit={handleLogin}>
           <input
