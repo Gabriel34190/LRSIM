@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import '../css/Proprietaires.css'; // Chemin vers le CSS
-import PhotoSandra from '../images/pion_gaby.jpg'; // Assurez-vous que le chemin est correct
-import logo from '../images/Lrsim_logo.png'
+import '../css/Proprietaires.css';
+import PhotoSandra from '../images/pion_gaby.jpg';
+import Navbar from './Navbar';
+import { auth } from './firebase-config';
 
 
 const Proprietaires = () => {
@@ -28,20 +29,11 @@ const Proprietaires = () => {
 
     return (
         <div>
-            <div className="navbar">
-                <div className="logo">
-                    <img src={logo} alt="Logo" />
-                </div>
-                <div className="nav-links">
-                    <a href="/" className="nav-link">Accueil</a>
-                    <a href="/proprietaires" className="nav-link">Propriétaires</a>
-                    <a href="/connexion" className="nav-link">Connexion</a>
-                </div>
-            </div>
+            <Navbar isAuthenticated={!!auth.currentUser} onLogout={() => auth.signOut()} />
 
             {/* Conteneur principal */}
             <div className="content-container">
-                <div className="home-container">
+                <div className="home-container fade-in">
                     <h1 className="home-title">Un problème ? Contactez votre propriétaire !</h1>
                     <div className="location-card" onClick={() => handleOwnerClick('Sandra')}>
                         <img src={PhotoSandra} alt="Sandra" />

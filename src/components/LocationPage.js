@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { doc, collection, getDoc, getDocs, deleteDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from './firebase-config';
+import Navbar from './Navbar';
 import NewAppartementForm from './NewAppartementForm';
 import '../css/Home.css';
 import '../css/LocationPage.css';
-import logo from '../images/Lrsim_logo.png';
 
 const LocationPage = () => {
     const { id } = useParams();
@@ -107,20 +107,10 @@ const LocationPage = () => {
 
     return (
         <div>
-            {/* Navbar */}
-            <div className="navbar">
-                <div className="logo">
-                    <img src={logo} alt="Logo" />
-                </div>
-                <div className="status-label">{user ? 'Connected' : 'Not Connected'}</div>
-                <div className="nav-links">
-                    <a href="/" className="nav-link">Accueil</a>
-                    <a href="/proprietaires" className="nav-link">Propriétaires</a>
-                </div>
-            </div>
+            <Navbar isAuthenticated={!!user} onLogout={() => auth.signOut()} />
 
             {/* Contenu principal */}
-            <div style={{ position: 'relative', padding: '20px' }}>
+            <div style={{ position: 'relative', padding: '20px' }} className="fade-in">
                 {error && <p className="error">{error}</p>}
                 {location ? <h1>{location.name}</h1> : <p>Lieu introuvable.</p>}
             </div>
@@ -142,65 +132,68 @@ const LocationPage = () => {
             )}
 
             {/* Liste des appartements */}
-            <div className="appartements-list">
-            {appartements.map((appartement) => (
-            <div
-                    key={appartement.id}
-                    className="appartement-card"
-                    onClick={() => handleAppartementClick(appartement.id)}
-                >
-                    {/* Bouton de suppression (visible uniquement pour les utilisateurs connectés) */}
-                    {user && (
-                        <button
-                            className="delete-button"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteAppartement(appartement.id);
-                            }}
-                        >
-                            ✖
-                        </button>
-                    )}
+            <div className="appartements-list locations-grid">
+                {appartements.map((appartement) => (
+                    <div
+                        key={appartement.id}
+                        className="appartement-card hover-lift"
+                        onClick={() => handleAppartementClick(appartement.id)}
+                    >
+                        {appartement.imageURL && (
+                            <div className="card-media">
+                                <img
+                                    src={appartement.imageURL}
+                                    alt={appartement.name}
+                                />
+                                <div className="media-overlay">
+                                    <div className="overlay-left">
+                                        <label className="switch small" onClick={(e) => e.stopPropagation()}>
+                                            <input
+                                                type="checkbox"
+                                                checked={appartement.disponible || false}
+                                                disabled={!user}
+                                                onChange={() => user && toggleDisponibilite(appartement.id, appartement.disponible)}
+                                            />
+                                            <span className="slider round"></span>
+                                        </label>
+                                    </div>
+                                    <div className="overlay-right">
+                                        {user && (
+                                            <button
+                                                className="delete-button overlay"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDeleteAppartement(appartement.id);
+                                                }}
+                                                aria-label={`Supprimer ${appartement.name}`}
+                                            >
+                                                ✖
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
-                    {/* Switch de disponibilité (visible pour tous mais modifiable uniquement par les utilisateurs connectés) */}
-                    <label className="switch" onClick={(e) => e.stopPropagation()}>
-                        <input
-                            type="checkbox"
-                            checked={appartement.disponible || false}
-                            disabled={!user} // Désactiver le switch pour les non-connectés
-                            onChange={() => user && toggleDisponibilite(appartement.id, appartement.disponible)}
-                        />
-                        <span
-                            className="slider round"
-                            style={{
-                                backgroundColor: appartement.disponible ? 'green' : 'red',
-                                cursor: user ? 'pointer' : 'not-allowed', // Changer le curseur si désactivé
-                            }}
-                        ></span>
-                        <span style={{ marginLeft: '10vh', fontWeight: 'bold' }}>
-                            {appartement.disponible ? 'Disponible' : 'Indisponible'}
-                        </span>
-                    </label>
-
-                    {/* Infos appartement */}
-                    <h2>{appartement.name}</h2>
-                    {appartement.imageURL && (
-                        <img
-                            src={appartement.imageURL}
-                            alt={appartement.name}
-                            style={{
-                                width: '100%',
-                                maxWidth: '20vw',
-                                height: 'auto',
-                                objectFit: 'cover',
-                                borderRadius: '1vw'
-                            }}
-                        />
-                    )}
-                    <p>{appartement.description}</p>
-                    <p>Loyer : {appartement.price} €</p>
-                    <p>Adresse: {appartement.Adress}</p>
-            </div>
+                        <div className="card-body">
+                            <div className="card-title-row">
+                                <h2 className="card-title">{appartement.name}</h2>
+                                <span className={`badge ${appartement.disponible ? 'badge-success' : 'badge-danger'}`}>
+                                    {appartement.disponible ? 'Disponible' : 'Indisponible'}
+                                </span>
+                            </div>
+                            <div className="card-meta">
+                                {appartement.rooms && <span className="chip">{appartement.rooms} pièces</span>}
+                                {appartement.bedrooms && <span className="chip">{appartement.bedrooms} ch.</span>}
+                                {appartement.surface && <span className="chip">{appartement.surface} m²</span>}
+                            </div>
+                            <p className="description-clamp">{appartement.description}</p>
+                            <div className="card-row">
+                                <span className="price">{appartement.price ? `${appartement.price} € / mois` : 'Prix à définir'}</span>
+                                {appartement.Adress && <span className="address">{appartement.Adress}</span>}
+                            </div>
+                        </div>
+                    </div>
                 ))}
             </div>
         </div>

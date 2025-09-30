@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from './firebase-config';
 import { Dialog } from "@headlessui/react";
 import '../css/Home.css';
 import '../css/LocationPage.css';
 import '../css/AppartementDetailsPage.css';
-import logo from '../images/Lrsim_logo.png';
+import Navbar from './Navbar';
 
 const AppartementDetailsPage = () => {
     const { locationId, appartementId } = useParams();
@@ -260,16 +260,7 @@ const AppartementDetailsPage = () => {
 
     return (
         <div>
-            <div className="navbar">
-                <div className="logo">
-                    <img src={logo} alt="Logo" />
-                </div>
-                <div className="nav-links">
-                    <Link to="/" className="nav-link">Accueil</Link>
-                    <Link to="/proprietaires" className="nav-link">Propriétaires</Link>
-                </div>
-                <div className="status-label">{user ? 'Connecté' : 'Non connecté'}</div>
-            </div>
+            <Navbar isAuthenticated={!!user} onLogout={() => auth.signOut()} />
 
             <div className="appartement-details">
                 {error && <p className="error">{error}</p>}
@@ -846,7 +837,7 @@ const AppartementDetailsPage = () => {
                         )}
 
                         <div className="image-gallery">
-                        {imageURLs.map((url, index) => (
+                            {imageURLs.map((url, index) => (
                             <div key={index} className="uploaded-image-item">
                                 <div className="uploaded-image-wrapper">
                                     <img
@@ -868,8 +859,8 @@ const AppartementDetailsPage = () => {
                                         <span className="image-index">Photo {index + 1}</span>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                                </div>
+                            ))}
                         </div>
 
                         {user && (
