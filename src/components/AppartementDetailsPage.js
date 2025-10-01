@@ -23,6 +23,10 @@ const AppartementDetailsPage = () => {
     const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
     const [clientEmail, setClientEmail] = useState('');
     const [customMessage, setCustomMessage] = useState('');
+    // DPE (diagnostic énergétique)
+    const [dpeReducedFile, setDpeReducedFile] = useState(null);
+    const [dpeDetailedFile, setDpeDetailedFile] = useState(null);
+    const [dpePreviewUrl, setDpePreviewUrl] = useState(null);
     
     // États pour les spécifications de l'appartement
     const [apartmentSpecs, setApartmentSpecs] = useState({});
@@ -129,6 +133,38 @@ const AppartementDetailsPage = () => {
         } catch (err) {
             console.error("Erreur lors de l'upload Cloudinary:", err);
             throw err;
+        }
+    };
+
+    // Upload DPE image helper
+    const uploadDpeImage = async (file) => {
+        return await uploadImageToCloudinary(file);
+    };
+
+    const handleUploadDpe = async () => {
+        if (!user) return;
+        try {
+            const docRef = doc(db, 'locations', locationId, 'appartements', appartementId);
+            const updates = {};
+            if (dpeReducedFile) {
+                const url = await uploadDpeImage(dpeReducedFile);
+                updates['diagnostics.dpeImageReducedUrl'] = url;
+            }
+            if (dpeDetailedFile) {
+                const url = await uploadDpeImage(dpeDetailedFile);
+                updates['diagnostics.dpeImageDetailedUrl'] = url;
+            }
+            if (Object.keys(updates).length > 0) {
+                await updateDoc(docRef, updates);
+                setAppartement({ ...appartement, diagnostics: { ...(appartement.diagnostics || {}), ...updates.diagnostics, ...{
+                    dpeImageReducedUrl: updates['diagnostics.dpeImageReducedUrl'] || (appartement.diagnostics && appartement.diagnostics.dpeImageReducedUrl),
+                    dpeImageDetailedUrl: updates['diagnostics.dpeImageDetailedUrl'] || (appartement.diagnostics && appartement.diagnostics.dpeImageDetailedUrl)
+                } } });
+            }
+            setDpeReducedFile(null);
+            setDpeDetailedFile(null);
+        } catch (err) {
+            console.error('Erreur upload DPE:', err);
         }
     };
 
@@ -340,7 +376,7 @@ const AppartementDetailsPage = () => {
                             </div>
                         </div>
 
-                        {/* Galerie d'images */}
+                        {/* Galerie d'images - AFFICHÉE EN PREMIER */}
                         <div className="image-gallery">
                             <div className="main-image-container">
                                 {selectedImage ? (
@@ -349,9 +385,9 @@ const AppartementDetailsPage = () => {
                                         alt="Appartement" 
                                         className="main-image"
                                     />
-                                ) : appartement.images && appartement.images.length > 0 ? (
+                                ) : imageURLs && imageURLs.length > 0 ? (
                                     <img 
-                                        src={appartement.images[0]} 
+                                        src={imageURLs[0]} 
                                         alt="Appartement" 
                                         className="main-image"
                                     />
@@ -361,16 +397,16 @@ const AppartementDetailsPage = () => {
                                         <p>Aucune image disponible</p>
                                     </div>
                                 )}
-                                {appartement.images && appartement.images.length > 1 && (
+                                {imageURLs && imageURLs.length > 1 && (
                                     <div className="image-counter">
-                                        {appartement.images.findIndex(img => img === selectedImage || (selectedImage === null && img === appartement.images[0])) + 1}/{appartement.images.length}
+                                        {imageURLs.findIndex(img => img === selectedImage || (selectedImage === null && img === imageURLs[0])) + 1}/{imageURLs.length}
                                     </div>
                                 )}
                             </div>
                             
-                            {appartement.images && appartement.images.length > 0 && (
+                            {imageURLs && imageURLs.length > 0 && (
                                 <div className="modern-thumbnail-gallery">
-                                    {appartement.images.map((image, index) => (
+                                    {imageURLs.map((image, index) => (
                                         <div 
                                             key={index}
                                             className={`modern-thumbnail ${(selectedImage === image) || (selectedImage === null && index === 0) ? 'active' : ''}`}
@@ -398,7 +434,9 @@ const AppartementDetailsPage = () => {
                             )}
                         </div>
 
-                        {/* Description de l'appartement */}
+                        {/* Section des détails de l'appartement - AFFICHÉE APRÈS LES PHOTOS */}
+                        <div className="apartment-details-section">
+                            {/* Description de l'appartement */}
                         <div className="appartement-description">
                             <h2 className="description-title">Descriptif de cet appartement à louer</h2>
                             <div className="description-content">
@@ -420,6 +458,59 @@ const AppartementDetailsPage = () => {
                                         appartement.description
                                 )}
                             </p>
+                            </div>
+                        </div>
+
+                        {/* DPE - Diagnostic énergétique */}
+                        <div className="dpe-section">
+                            <div className="dpe-header">
+                                <h2>Diagnostic énergétique (DPE)</h2>
+                                {user && (
+                                    <div className="dpe-actions">
+                                        <label className="dpe-upload">
+                                            <input
+                                                type="file"
+                                                accept="image/png,image/jpeg"
+                                                onChange={(e) => setDpeReducedFile(e.target.files?.[0] || null)}
+                                                className="file-input-hidden"
+                                            />
+                                            Importer réduit (PNG/JPG)
+                                        </label>
+                                        <label className="dpe-upload">
+                                            <input
+                                                type="file"
+                                                accept="image/png,image/jpeg"
+                                                onChange={(e) => setDpeDetailedFile(e.target.files?.[0] || null)}
+                                                className="file-input-hidden"
+                                            />
+                                            Importer détaillé (PNG/JPG)
+                                        </label>
+                                        <button
+                                            className="upload-button"
+                                            onClick={handleUploadDpe}
+                                            disabled={!dpeReducedFile && !dpeDetailedFile}
+                                        >
+                                            Ajouter le diagnostic énergétique
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="dpe-grid">
+                                {appartement?.diagnostics?.dpeImageReducedUrl && (
+                                    <div className="dpe-card" onClick={() => { setDpePreviewUrl(appartement.diagnostics.dpeImageReducedUrl); setIsModalOpen(true); }}>
+                                        <img src={appartement.diagnostics.dpeImageReducedUrl} alt="DPE réduit" />
+                                        <span className="dpe-label">Version réduite</span>
+                                    </div>
+                                )}
+                                {appartement?.diagnostics?.dpeImageDetailedUrl && (
+                                    <div className="dpe-card" onClick={() => { setDpePreviewUrl(appartement.diagnostics.dpeImageDetailedUrl); setIsModalOpen(true); }}>
+                                        <img src={appartement.diagnostics.dpeImageDetailedUrl} alt="DPE détaillé" />
+                                        <span className="dpe-label">Version détaillée</span>
+                                    </div>
+                                )}
+                                {!appartement?.diagnostics?.dpeImageReducedUrl && !appartement?.diagnostics?.dpeImageDetailedUrl && (
+                                    <p>Aucun diagnostic ajouté pour le moment.</p>
+                                )}
                             </div>
                         </div>
 
@@ -800,69 +891,9 @@ const AppartementDetailsPage = () => {
                                 </p>
                             </div>
                         )}
-
-                        {selectedImage && (
-                            <>
-                                <div className="main-image-container">
-                                    <img
-                                        src={selectedImage}
-                                        alt="Appartement"
-                                        className="main-image"
-                                        onClick={() => setIsModalOpen(true)}
-                                    />
-                                </div>
-
-                                <Dialog
-                                    open={isModalOpen}
-                                    onClose={() => setIsModalOpen(false)}
-                                    className="relative z-50"
-                                >
-                                    <div className="fixed inset-0 bg-black/70 flex items-center justify-center">
-                                        <Dialog.Panel className="relative">
-                                            <img
-                                                src={selectedImage}
-                                                alt="Aperçu"
-                                                className="max-w-[90vw] max-h-[90vh] rounded-lg"
-                                            />
-                                            <button
-                                                className="absolute top-[0.2vw] right-[0.2vw] bg-white p-[0.2vw] rounded-full shadow-md"
-                                                onClick={() => setIsModalOpen(false)}
-                                            >
-                                                ❌
-                                            </button>
-                                        </Dialog.Panel>
-                                    </div>
-                                </Dialog>
-                            </>
-                        )}
-
-                        <div className="image-gallery">
-                            {imageURLs.map((url, index) => (
-                            <div key={index} className="uploaded-image-item">
-                                <div className="uploaded-image-wrapper">
-                                    <img
-                                        src={url}
-                                        alt="Appartement"
-                                        className="uploaded-thumbnail"
-                                        onClick={() => setSelectedImage(url)}
-                                    />
-                                    {user && (
-                                        <button
-                                            className="delete-uploaded-btn"
-                                            onClick={() => deleteImage(url)}
-                                            title="Supprimer cette photo"
-                                        >
-                                            <span className="delete-icon">×</span>
-                                        </button>
-                                    )}
-                                    <div className="image-info">
-                                        <span className="image-index">Photo {index + 1}</span>
-                                    </div>
-                                </div>
-                                </div>
-                            ))}
                         </div>
 
+                        {/* Section d'upload d'images pour les administrateurs */}
                         {user && (
                             <div className="image-upload-section">
                                 <div className="upload-container">
@@ -890,6 +921,34 @@ const AppartementDetailsPage = () => {
                                     </button>
                                 </div>
                             </div>
+                        )}
+
+
+                        {/* Modal pour l'aperçu des images */}
+                        {selectedImage && (
+                            <>
+                                <Dialog
+                                    open={isModalOpen}
+                                    onClose={() => setIsModalOpen(false)}
+                                    className="relative z-50"
+                                >
+                                    <div className="fixed inset-0 bg-black/70 flex items-center justify-center">
+                                        <Dialog.Panel className="relative">
+                                            <img
+                                                src={dpePreviewUrl || selectedImage}
+                                                alt="Aperçu"
+                                                className="max-w-[90vw] max-h-[90vh] rounded-lg"
+                                            />
+                                            <button
+                                                className="absolute top-[0.2vw] right-[0.2vw] bg-white p-[0.2vw] rounded-full shadow-md"
+                                                onClick={() => setIsModalOpen(false)}
+                                            >
+                                                ❌
+                                            </button>
+                                        </Dialog.Panel>
+                                    </div>
+                                </Dialog>
+                            </>
                         )}
 
 
