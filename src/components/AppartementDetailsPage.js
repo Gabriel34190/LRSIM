@@ -6,7 +6,9 @@ import { Dialog } from "@headlessui/react";
 import '../css/Home.css';
 import '../css/LocationPage.css';
 import '../css/AppartementDetailsPage.css';
+import '../css/AppartementMap.css';
 import Navbar from './Navbar';
+import AppartementMap from './AppartementMap';
 
 const AppartementDetailsPage = () => {
     const { locationId, appartementId } = useParams();
@@ -459,6 +461,25 @@ const AppartementDetailsPage = () => {
                                 )}
                             </p>
                             </div>
+                        </div>
+
+                        {/* Carte de localisation */}
+                        <div className="map-section">
+                            <AppartementMap 
+                                address={appartement.Adress} 
+                                appartementName={appartement.name}
+                                user={user}
+                                onAddressUpdate={async (newAddress) => {
+                                    try {
+                                        const docRef = doc(db, 'locations', locationId, 'appartements', appartementId);
+                                        await updateDoc(docRef, { Adress: newAddress });
+                                        setAppartement({ ...appartement, Adress: newAddress });
+                                    } catch (err) {
+                                        console.error('Erreur lors de la mise à jour de l\'adresse:', err);
+                                        throw err;
+                                    }
+                                }}
+                            />
                         </div>
 
                         {/* DPE - Diagnostic énergétique */}

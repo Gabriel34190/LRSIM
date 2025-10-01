@@ -805,6 +805,13 @@
     overflow: hidden;
 }
 
+/* Section de la carte */
+.map-section {
+    padding: 0;
+    background: white;
+    border-top: 0.1vw solid #e9ecef;
+}
+
 /* Description de l'appartement */
 .appartement-description {
     padding: 2vw;

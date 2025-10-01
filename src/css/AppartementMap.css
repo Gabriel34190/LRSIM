@@ -1,0 +1,379 @@
+/* Conteneur principal de la carte */
+.map-container {
+    margin: 2vw 0;
+    background: white;
+    border-radius: 1vw;
+    box-shadow: 0 0.2vw 1vw rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+/* En-tête de la carte */
+.map-header {
+    padding: 1.5vw 2vw;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 0.1vw solid #dee2e6;
+}
+
+.map-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5vw;
+}
+
+.map-title {
+    font-size: 1.6vw;
+    font-weight: bold;
+    color: #212529;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5vw;
+}
+
+.edit-address-btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 0.3vw;
+    padding: 0.5vw 0.8vw;
+    font-size: 1.2vw;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.edit-address-btn:hover {
+    background: #0056b3;
+    transform: translateY(-0.1vw);
+}
+
+.map-address {
+    font-size: 1.1vw;
+    color: #6c757d;
+    margin: 0;
+    font-style: italic;
+}
+
+/* Formulaire d'édition d'adresse */
+.address-edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1vw;
+}
+
+.address-edit-input {
+    width: 100%;
+    padding: 0.8vw 1vw;
+    border: 0.15vw solid #007bff;
+    border-radius: 0.5vw;
+    font-size: 1.1vw;
+    font-family: inherit;
+    background-color: white;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    box-sizing: border-box;
+}
+
+.address-edit-input:focus {
+    outline: none;
+    border-color: #0056b3;
+    box-shadow: 0 0 0 0.2vw rgba(0, 123, 255, 0.2);
+}
+
+.address-edit-actions {
+    display: flex;
+    gap: 1vw;
+    justify-content: flex-end;
+}
+
+.save-address-btn,
+.cancel-address-btn {
+    padding: 0.6vw 1.2vw;
+    border: none;
+    border-radius: 0.3vw;
+    font-size: 1vw;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5vw;
+}
+
+.save-address-btn {
+    background-color: #28a745;
+    color: white;
+}
+
+.save-address-btn:hover {
+    background-color: #1e7e34;
+    transform: translateY(-0.1vw);
+}
+
+.cancel-address-btn {
+    background-color: #6c757d;
+    color: white;
+}
+
+.cancel-address-btn:hover {
+    background-color: #545b62;
+    transform: translateY(-0.1vw);
+}
+
+/* Wrapper de la carte */
+.map-wrapper {
+    position: relative;
+    background: #f8f9fa;
+}
+
+/* Carte Leaflet */
+.appartement-map {
+    border-radius: 0;
+    z-index: 1;
+}
+
+/* État de chargement */
+.map-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 300px;
+    background: #f8f9fa;
+    color: #6c757d;
+}
+
+.loading-spinner {
+    width: 3vw;
+    height: 3vw;
+    border: 0.3vw solid #e9ecef;
+    border-top: 0.3vw solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1vw;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.map-loading p {
+    font-size: 1.2vw;
+    margin: 0;
+}
+
+/* État d'erreur */
+.map-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 300px;
+    background: #fff5f5;
+    color: #dc3545;
+    padding: 2vw;
+    text-align: center;
+}
+
+.error-icon {
+    font-size: 3vw;
+    margin-bottom: 1vw;
+}
+
+.map-error p {
+    font-size: 1.2vw;
+    margin: 0.5vw 0;
+}
+
+.error-address {
+    font-size: 1vw;
+    color: #6c757d;
+    font-style: italic;
+}
+
+/* Popup de la carte */
+.map-popup {
+    text-align: center;
+    min-width: 200px;
+}
+
+.map-popup h4 {
+    font-size: 1.2vw;
+    font-weight: bold;
+    color: #212529;
+    margin: 0 0 0.5vw 0;
+}
+
+.map-popup p {
+    font-size: 1vw;
+    color: #6c757d;
+    margin: 0 0 1vw 0;
+}
+
+.map-actions {
+    margin-top: 1vw;
+}
+
+.directions-link {
+    display: inline-block;
+    padding: 0.5vw 1vw;
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 0.3vw;
+    font-size: 1vw;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+}
+
+.directions-link:hover {
+    background-color: #0056b3;
+    color: white;
+    text-decoration: none;
+}
+
+/* Pied de page de la carte */
+.map-footer {
+    padding: 1vw 2vw;
+    background: #f8f9fa;
+    border-top: 0.1vw solid #dee2e6;
+}
+
+.map-info {
+    font-size: 1vw;
+    color: #6c757d;
+    margin: 0;
+    text-align: center;
+    font-style: italic;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .map-container {
+        margin: 4vw 0;
+        border-radius: 2vw;
+    }
+    
+    .map-header {
+        padding: 3vw 4vw;
+    }
+    
+    .map-title {
+        font-size: 4vw;
+    }
+    
+    .map-address {
+        font-size: 3vw;
+    }
+    
+    .edit-address-btn {
+        padding: 1vw 1.5vw;
+        font-size: 3vw;
+        border-radius: 0.8vw;
+    }
+    
+    .address-edit-input {
+        padding: 2vw 2.5vw;
+        font-size: 3vw;
+        border-radius: 1vw;
+        border-width: 0.4vw;
+    }
+    
+    .address-edit-actions {
+        gap: 2vw;
+    }
+    
+    .save-address-btn,
+    .cancel-address-btn {
+        padding: 1.5vw 3vw;
+        font-size: 2.5vw;
+        border-radius: 0.8vw;
+    }
+    
+    .map-wrapper {
+        height: 50vw;
+    }
+    
+    .appartement-map {
+        height: 50vw !important;
+    }
+    
+    .map-loading,
+    .map-error {
+        height: 50vw;
+    }
+    
+    .loading-spinner {
+        width: 8vw;
+        height: 8vw;
+        border-width: 0.8vw;
+    }
+    
+    .map-loading p,
+    .map-error p {
+        font-size: 3vw;
+    }
+    
+    .error-icon {
+        font-size: 8vw;
+    }
+    
+    .map-popup h4 {
+        font-size: 3vw;
+    }
+    
+    .map-popup p {
+        font-size: 2.5vw;
+    }
+    
+    .directions-link {
+        padding: 1vw 2vw;
+        font-size: 2.5vw;
+        border-radius: 0.8vw;
+    }
+    
+    .map-footer {
+        padding: 2vw 4vw;
+    }
+    
+    .map-info {
+        font-size: 2.5vw;
+    }
+}
+
+/* Styles pour les contrôles de la carte */
+.leaflet-control-zoom {
+    border: none !important;
+    box-shadow: 0 0.2vw 0.8vw rgba(0, 0, 0, 0.15) !important;
+}
+
+.leaflet-control-zoom a {
+    background-color: white !important;
+    color: #212529 !important;
+    border: none !important;
+    font-size: 1.2vw !important;
+    font-weight: bold !important;
+}
+
+.leaflet-control-zoom a:hover {
+    background-color: #f8f9fa !important;
+}
+
+/* Style pour le popup */
+.leaflet-popup-content-wrapper {
+    border-radius: 0.5vw !important;
+    box-shadow: 0 0.3vw 1.5vw rgba(0, 0, 0, 0.2) !important;
+}
+
+.leaflet-popup-content {
+    margin: 1vw !important;
+    font-family: inherit !important;
+}
+
+.leaflet-popup-tip {
+    background: white !important;
+    box-shadow: 0 0.2vw 0.5vw rgba(0, 0, 0, 0.1) !important;
+}
