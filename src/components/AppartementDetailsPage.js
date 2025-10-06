@@ -482,59 +482,6 @@ const AppartementDetailsPage = () => {
                             />
                         </div>
 
-                        {/* DPE - Diagnostic énergétique */}
-                        <div className="dpe-section">
-                            <div className="dpe-header">
-                                <h2>Diagnostic énergétique (DPE)</h2>
-                                {user && (
-                                    <div className="dpe-actions">
-                                        <label className="dpe-upload">
-                                            <input
-                                                type="file"
-                                                accept="image/png,image/jpeg"
-                                                onChange={(e) => setDpeReducedFile(e.target.files?.[0] || null)}
-                                                className="file-input-hidden"
-                                            />
-                                            Importer réduit (PNG/JPG)
-                                        </label>
-                                        <label className="dpe-upload">
-                                            <input
-                                                type="file"
-                                                accept="image/png,image/jpeg"
-                                                onChange={(e) => setDpeDetailedFile(e.target.files?.[0] || null)}
-                                                className="file-input-hidden"
-                                            />
-                                            Importer détaillé (PNG/JPG)
-                                        </label>
-                                        <button
-                                            className="upload-button"
-                                            onClick={handleUploadDpe}
-                                            disabled={!dpeReducedFile && !dpeDetailedFile}
-                                        >
-                                            Ajouter le diagnostic énergétique
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                            <div className="dpe-grid">
-                                {appartement?.diagnostics?.dpeImageReducedUrl && (
-                                    <div className="dpe-card" onClick={() => { setDpePreviewUrl(appartement.diagnostics.dpeImageReducedUrl); setIsModalOpen(true); }}>
-                                        <img src={appartement.diagnostics.dpeImageReducedUrl} alt="DPE réduit" />
-                                        <span className="dpe-label">Version réduite</span>
-                                    </div>
-                                )}
-                                {appartement?.diagnostics?.dpeImageDetailedUrl && (
-                                    <div className="dpe-card" onClick={() => { setDpePreviewUrl(appartement.diagnostics.dpeImageDetailedUrl); setIsModalOpen(true); }}>
-                                        <img src={appartement.diagnostics.dpeImageDetailedUrl} alt="DPE détaillé" />
-                                        <span className="dpe-label">Version détaillée</span>
-                                    </div>
-                                )}
-                                {!appartement?.diagnostics?.dpeImageReducedUrl && !appartement?.diagnostics?.dpeImageDetailedUrl && (
-                                    <p>Aucun diagnostic ajouté pour le moment.</p>
-                                )}
-                            </div>
-                        </div>
-
                         {/* Spécifications de l'appartement */}
                         <div className="apartment-specifications">
                             <h2 className="specs-title">À propos de cet appartement à louer</h2>
@@ -859,6 +806,59 @@ const AppartementDetailsPage = () => {
                                         </span>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+
+                        {/* Diagnostic énergétique - DPE (moved to the end) */}
+                        <div className="dpe-section">
+                            <div className="dpe-header">
+                                <h2>Diagnostic énergétique (DPE)</h2>
+                                {user && (
+                                    <div className="dpe-actions">
+                                        <label className="dpe-upload">
+                                            <input
+                                                type="file"
+                                                accept="image/png,image/jpeg"
+                                                onChange={(e) => setDpeReducedFile(e.target.files?.[0] || null)}
+                                                className="file-input-hidden"
+                                            />
+                                            Importer réduit (PNG/JPG)
+                                        </label>
+                                        <label className="dpe-upload">
+                                            <input
+                                                type="file"
+                                                accept="image/png,image/jpeg"
+                                                onChange={(e) => setDpeDetailedFile(e.target.files?.[0] || null)}
+                                                className="file-input-hidden"
+                                            />
+                                            Importer détaillé (PNG/JPG)
+                                        </label>
+                                        <button
+                                            className="upload-button"
+                                            onClick={handleUploadDpe}
+                                            disabled={!dpeReducedFile && !dpeDetailedFile}
+                                        >
+                                            Ajouter le diagnostic énergétique
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="dpe-grid">
+                                {appartement?.diagnostics?.dpeImageReducedUrl && (
+                                    <div className="dpe-card" onClick={() => { setDpePreviewUrl(appartement.diagnostics.dpeImageReducedUrl); setIsModalOpen(true); }}>
+                                        <img src={appartement.diagnostics.dpeImageReducedUrl} alt="DPE réduit" />
+                                        <span className="dpe-label">Version réduite</span>
+                                    </div>
+                                )}
+                                {appartement?.diagnostics?.dpeImageDetailedUrl && (
+                                    <div className="dpe-card" onClick={() => { setDpePreviewUrl(appartement.diagnostics.dpeImageDetailedUrl); setIsModalOpen(true); }}>
+                                        <img src={appartement.diagnostics.dpeImageDetailedUrl} alt="DPE détaillé" />
+                                        <span className="dpe-label">Version détaillée</span>
+                                    </div>
+                                )}
+                                {!appartement?.diagnostics?.dpeImageReducedUrl && !appartement?.diagnostics?.dpeImageDetailedUrl && (
+                                    <p>Aucun diagnostic ajouté pour le moment.</p>
+                                )}
                             </div>
                         </div>
 
