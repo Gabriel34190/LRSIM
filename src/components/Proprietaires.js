@@ -6,60 +6,118 @@ import { auth } from './firebase-config';
 
 
 const Proprietaires = () => {
-    const [selectedOwner, setSelectedOwner] = useState(null); // État pour le propriétaire sélectionné
-    const [isMenuOpen, setIsMenuOpen] = useState(false); // État pour savoir si le menu est ouvert
+    const owners = [
+        {
+            id: 'sandra',
+            name: 'Sandra Rouchon',
+            role: 'Propriétaire',
+            phone: '06 80 59 06 37',
+            email: 'sandra.rouchon@wanadoo.fr',
+            address: "1040 Avenue de L'Europe, 34190 Laroque, France",
+            availability: 'Lundi - Vendredi, 9h - 18h',
+            preference: 'Email de préférence',
+            notes: 'Très réactive aux demandes.',
+            photo: PhotoSandra
+        }
+    ];
+
+    const [selectedOwner, setSelectedOwner] = useState(null);
+    const [isPanelOpen, setIsPanelOpen] = useState(false);
 
     const handleOwnerClick = (owner) => {
-        setSelectedOwner(owner); // Définit le propriétaire sélectionné
-        setIsMenuOpen(true); // Ouvre le menu
+        setSelectedOwner(owner);
+        setIsPanelOpen(true);
     };
 
-    const handleCloseMenu = () => {
-        setSelectedOwner(null); // Ferme le menu
-        setIsMenuOpen(false); // Ferme le menu
+    const handleClosePanel = () => {
+        setSelectedOwner(null);
+        setIsPanelOpen(false);
     };
 
     useEffect(() => {
-        if (isMenuOpen) {
-            document.body.classList.add('body-blurred'); // Ajoute la classe au corps
+        if (isPanelOpen) {
+            document.body.classList.add('body-blurred');
         } else {
-            document.body.classList.remove('body-blurred'); // Retire la classe du corps
+            document.body.classList.remove('body-blurred');
         }
-    }, [isMenuOpen]);
+    }, [isPanelOpen]);
 
     return (
         <div>
             <Navbar isAuthenticated={!!auth.currentUser} onLogout={() => auth.signOut()} />
 
-            {/* Conteneur principal */}
-            <div className="content-container">
-                <div className="home-container fade-in">
-                    <h1 className="home-title">Un problème ? Contactez votre propriétaire !</h1>
-                    <div className="location-card" onClick={() => handleOwnerClick('Sandra')}>
-                        <img src={PhotoSandra} alt="Sandra" />
-                        <p>Sandra Rouchon</p>
-                    </div>
+            <div className={`content-container ${isPanelOpen ? 'is-blurred' : ''}`}>
+                <div className="owners-hero">
+                    <h1 className="owners-title">Besoin d'aide ? Contactez votre propriétaire</h1>
+                    <p className="owners-subtitle">Nous sommes là pour vous accompagner rapidement.</p>
                 </div>
 
-                {/* Menu déroulant pour les informations du propriétaire */}
-                {selectedOwner && (
-                    <div className="dropdown-menu">
-                        <button className="close-button" onClick={handleCloseMenu}>X</button>
-                        <h2>Détails sur {selectedOwner}</h2>
-                        {selectedOwner === 'Sandra' && (
-                            <>
-                                <p><strong>Nom Complet :</strong> Sandra Rouchon</p>
-                                <p><strong>Numéro de Téléphone :</strong>06 80 59 06 37</p>
-                                <p><strong>Adresse Email :</strong> sandra</p>
-                                <p><strong>Adresse Postale :</strong> 1040 Avenue de L'Europe, Laroque 34190</p>
-                                <p><strong>Disponibilité :</strong> Lundi - Vendredi, 9h - 18h</p>
-                                <p><strong>Préférences de Contact :</strong> Email de préférence</p>
-                                <p><strong>Remarques Spéciales :</strong> Très réactif aux demandes.</p>
-                            </>
-                        )}
-                    </div>
-                )}
+                <div className="owners-grid">
+                    {owners.map((owner) => (
+                        <div className="owner-card" key={owner.id} onClick={() => handleOwnerClick(owner)}>
+                            <div className="owner-photo-wrapper">
+                                <img src={owner.photo} alt={owner.name} className="owner-photo" />
+                                <span className="owner-badge">{owner.role}</span>
+                            </div>
+                            <div className="owner-info">
+                                <h3 className="owner-name">{owner.name}</h3>
+                                <div className="owner-contact-chips">
+                                    <span className="chip">📞 {owner.phone}</span>
+                                    <span className="chip">✉️ {owner.email}</span>
+                                </div>
+                                <button className="owner-cta">Voir les détails</button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
+
+            {selectedOwner && (
+                <>
+                    <div className={`owner-panel ${isPanelOpen ? 'open' : ''}`}>
+                        <div className="panel-header">
+                            <div className="panel-owner">
+                                <img src={selectedOwner.photo} alt={selectedOwner.name} />
+                                <div>
+                                    <h2>{selectedOwner.name}</h2>
+                                    <span className="panel-role">{selectedOwner.role}</span>
+                                </div>
+                            </div>
+                            <button className="panel-close" onClick={handleClosePanel}>×</button>
+                        </div>
+
+                        <div className="panel-content">
+                            <div className="panel-section">
+                                <h4>Coordonnées</h4>
+                                <p><span className="icon">📞</span>{selectedOwner.phone}</p>
+                                <p><span className="icon">✉️</span>{selectedOwner.email}</p>
+                                <p><span className="icon">📍</span>{selectedOwner.address}</p>
+                            </div>
+
+                            <div className="panel-section">
+                                <h4>Disponibilités</h4>
+                                <p>{selectedOwner.availability}</p>
+                            </div>
+
+                            <div className="panel-section">
+                                <h4>Préférences</h4>
+                                <p>{selectedOwner.preference}</p>
+                            </div>
+
+                            <div className="panel-section">
+                                <h4>Remarques</h4>
+                                <p>{selectedOwner.notes}</p>
+                            </div>
+
+                            <div className="panel-actions">
+                                <a href={`tel:${selectedOwner.phone.replace(/\s/g, '')}`} className="action-btn call">📞 Appeler</a>
+                                <a href={`mailto:${selectedOwner.email}`} className="action-btn email">✉️ Envoyer un email</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div className={`backdrop ${isPanelOpen ? 'visible' : ''}`} onClick={handleClosePanel} />
+                </>
+            )}
         </div>
     );
 };
