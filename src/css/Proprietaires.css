@@ -182,6 +182,13 @@
 .action-btn.call { background: #28a745; }
 .action-btn.email { background: var(--brand); }
 
+/* Planning */
+.availability-planning { margin-top: 0.8vw; display: flex; flex-direction: column; gap: 0.5vw; }
+.planning-row { display: flex; align-items: center; gap: 0.8vw; padding: 0.6vw 0.8vw; background: var(--gray-100); border-radius: 0.5vw; }
+.planning-row.current { outline: 0.15vw solid rgba(0,123,255,0.25); background: #eef6ff; }
+.planning-day { min-width: 9vw; font-weight: 600; color: var(--text); }
+.planning-times { color: var(--gray-600); }
+
 /* Responsive */
 @media (max-width: 768px) {
     .owners-title { font-size: 6vw; }
@@ -192,4 +199,80 @@
     .panel-owner h2 { font-size: 4vw; }
     .panel-role { font-size: 3vw; }
     .panel-close { font-size: 8vw; }
+}
+/* ---------- Availability badge + layout ---------- */
+.owner-availability {
+    margin: 0.8vw 0;
+    display: flex;
+    align-items: center;
+    gap: 0.8vw;
+    flex-wrap: wrap;
+}
+
+.availability-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.45vw 0.9vw;
+    border-radius: 2vw;
+    font-weight: 700;
+    font-size: 0.9vw;
+    line-height: 1;
+    border: 1px solid transparent;
+    transition: background 0.18s ease, color 0.18s ease, transform 0.12s ease;
+    white-space: nowrap;
+}
+
+/* style vert pour "Disponible" */
+.availability-badge.available {
+    background: #e8f7ec;               /* fond vert pâle */
+    color: #0a7f3a;                    /* texte vert foncé */
+    border-color: rgba(10,127,58,0.12);
+}
+
+/* style rouge pour "Indisponible" */
+.availability-badge.unavailable {
+    background: #fff3f3;
+    color: #b00020;
+    border-color: rgba(176,0,32,0.09);
+}
+
+/* petit point devant le texte (optionnel mais joli) */
+.availability-badge::before {
+    content: "";
+    display: inline-block;
+    width: 0.6vw;
+    height: 0.6vw;
+    border-radius: 50%;
+    margin-right: 0.6vw;
+    background: currentColor;
+    opacity: 0.95;
+}
+
+/* Assurer que le backdrop est sous le panel (gestion de z-index) */
+.backdrop {
+    z-index: 1000;
+}
+
+.owner-panel {
+    z-index: 1001; /* tu l'avais déjà, on le confirme */
+}
+
+/* Le JS ajoute body.body-blurred : empêcher le scroll quand ouvert */
+body.body-blurred {
+    overflow: hidden;
+}
+
+/* Responsive tweaks (mobile) */
+@media (max-width: 768px) {
+    .availability-badge {
+        padding: 1.4vw 3vw;
+        font-size: 3vw;
+        border-radius: 3vw;
+    }
+    .availability-badge::before {
+        width: 2.2vw;
+        height: 2.2vw;
+        margin-right: 2vw;
+    }
 }
