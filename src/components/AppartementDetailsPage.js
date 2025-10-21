@@ -8,6 +8,7 @@ import '../css/LocationPage.css';
 import '../css/AppartementDetailsPage.css';
 import '../css/AppartementMap.css';
 import Navbar from './Navbar';
+import LRSIMLogo from '../images/Lrsim_logo.png';
 import AppartementMap from './AppartementMap';
 
 const AppartementDetailsPage = () => {
@@ -656,7 +657,6 @@ const AppartementDetailsPage = () => {
                                         </span>
                                     </div>
                                 </div>
-                                
                                 <div className="specs-column">
                                     <div className="spec-row">
                                         <span className="spec-label">Charges :</span>
@@ -920,7 +920,7 @@ const AppartementDetailsPage = () => {
                                 <div className="upload-container">
                                     <div className="file-input-wrapper">
                                         <input 
-                                            type="file" 
+                                            type="file"
                                             accept="image/*" 
                                             onChange={handleImageChange} 
                                             className="file-input-hidden"
@@ -976,7 +976,7 @@ const AppartementDetailsPage = () => {
                         {isEmailModalOpen && (
                             <div className="email-modal">
                                 <div className="email-modal-header">
-                                    <span>Contacter le propriétaire</span>
+                                    <img src={LRSIMLogo} alt="LRSIM" className="email-modal-logo" />
                                     <button 
                                         onClick={() => setIsEmailModalOpen(false)}
                                         className="close-modal-button"
@@ -1006,7 +1006,7 @@ const AppartementDetailsPage = () => {
                                         />
                                     </div>
                                     <div className="email-field">
-                                        <span className="email-label">Votre message (optionnel)</span>
+                                        <span className="email-label">Votre message</span>
                                         <textarea
                                             value={customMessage}
                                             onChange={(e) => setCustomMessage(e.target.value)}
@@ -1016,7 +1016,7 @@ const AppartementDetailsPage = () => {
                                         />
                                     </div>
                                     <div className="email-field">
-                                        <span className="email-label">Objet (automatique)</span>
+                                        <span className="email-label">Objet</span>
                                         <input
                                             type="text"
                                             value={`Demande d'information - ${appartement.name}`}

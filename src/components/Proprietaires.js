@@ -16,8 +16,33 @@ const DAYS = {
   'samedi': 6
 };
 
-const normalize = (s = '') =>
-  s.normalize ? s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim() : s.toLowerCase().trim();
+function normalize(s = '') {
+  // Si s n'est pas une chaîne, on le transforme en chaîne
+  if (typeof s !== 'string') {
+    s = String(s);
+  }
+
+  // Si la méthode normalize existe (c’est le cas pour les chaînes modernes)
+  if (s.normalize) {
+    // Étape 1 : Décomposer les lettres accentuées (é → e + ´)
+    let text = s.normalize('NFD');
+
+    // Étape 2 : Supprimer les signes d'accent (´, ˆ, ¨, etc.)
+    text = text.replace(/[\u0300-\u036f]/g, '');
+
+    // Étape 3 : Mettre en minuscules
+    text = text.toLowerCase();
+
+    // Étape 4 : Enlever les espaces avant et après
+    text = text.trim();
+
+    return text;
+  }
+  else {
+    // Si normalize n’existe pas, on fait une version simplifiée
+    return s.toLowerCase().trim();
+  }
+}
 
 function parseDaysPart(daysPart) {
   if (!daysPart) return new Set(Object.values(DAYS));
