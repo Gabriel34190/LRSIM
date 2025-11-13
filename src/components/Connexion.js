@@ -16,15 +16,11 @@ function Connexion() {
     e.preventDefault();
     signInWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
-        // Connexion réussie
-        const user = userCredential.user;
-        console.log("Admin connecté", user);
         // Redirection vers la page d'accueil
         navigate('/');
       })
       .catch((error) => {
         setError("Identifiants incorrects");
-        console.log(error.message);
       });
   };
 
