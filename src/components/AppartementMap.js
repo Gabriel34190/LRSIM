@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
+import { Dialog } from "@headlessui/react";
 import 'leaflet/dist/leaflet.css';
 
 // Fix pour les icônes Leaflet
@@ -11,13 +12,14 @@ L.Icon.Default.mergeOptions({
     shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
 });
 
-const AppartementMap = ({ address, appartementName, user, onAddressUpdate }) => {
+const AppartementMap = ({ address, appartementName, user, onAddressUpdate, imageUrl }) => {
     const [position, setPosition] = useState([46.2276, 2.2137]); // Centre de la France par défaut
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [normalizedAddress, setNormalizedAddress] = useState(address || '');
     const [isEditingAddress, setIsEditingAddress] = useState(false);
     const [tempAddress, setTempAddress] = useState(address || '');
+    const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
     // Extraction simple des composants: rue + code postal + (ville optionnelle)
     const parseAddressComponents = (rawAddress) => {
@@ -236,6 +238,15 @@ const AppartementMap = ({ address, appartementName, user, onAddressUpdate }) => 
                             <div className="map-popup">
                                 <h4>{appartementName}</h4>
                                 <p>{normalizedAddress}</p>
+                                {imageUrl && (
+                                    <img
+                                        src={imageUrl}
+                                        alt="Appartement"
+                                        className="popup-image"
+                                        onClick={() => setIsImageModalOpen(true)}
+                                        style={{ cursor: 'pointer', maxWidth: '100px', borderRadius: '4px' }}
+                                    />
+                                )}
                                 <div className="map-actions">
                                     <a 
                                         href={`https://www.google.com/maps/dir/?api=1&destination=${position[0]},${position[1]}`}
@@ -257,6 +268,31 @@ const AppartementMap = ({ address, appartementName, user, onAddressUpdate }) => 
                     💡 Cliquez sur le marqueur pour obtenir l'itinéraire
                 </p>
             </div>
+
+            {/* Modal pour afficher l'image en grand */}
+            {imageUrl && (
+                <Dialog
+                    open={isImageModalOpen}
+                    onClose={() => setIsImageModalOpen(false)}
+                    className="relative z-50"
+                >
+                    <div className="fixed inset-0 bg-black/70 flex items-center justify-center">
+                        <Dialog.Panel className="relative">
+                            <img
+                                src={imageUrl}
+                                alt="Aperçu"
+                                className="max-w-[90vw] max-h-[90vh] rounded-lg"
+                            />
+                            <button
+                                className="absolute top-[0.2vw] right-[0.2vw] bg-white p-[0.2vw] rounded-full shadow-md"
+                                onClick={() => setIsImageModalOpen(false)}
+                            >
+                                ❌
+                            </button>
+                        </Dialog.Panel>
+                    </div>
+                </Dialog>
+            )}
         </div>
     );
 };

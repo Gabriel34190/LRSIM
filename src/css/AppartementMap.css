@@ -377,3 +377,14 @@
     background: white !important;
     box-shadow: 0 0.2vw 0.5vw rgba(0, 0, 0, 0.1) !important;
 }
+
+.popup-image {
+    max-width: 100px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.popup-image:hover {
+    transform: scale(1.1);
+}

@@ -295,6 +295,30 @@ const AppartementDetailsPage = () => {
         setContractEndDate(e.target.value);
     };
 
+    const handleDeleteDpeImage = async (type) => {
+        if (!user) return;
+        try {
+            const docRef = doc(db, 'locations', locationId, 'appartements', appartementId);
+            const updates = {};
+            if (type === 'reduced') {
+                updates['diagnostics.dpeImageReducedUrl'] = null;
+            } else if (type === 'detailed') {
+                updates['diagnostics.dpeImageDetailedUrl'] = null;
+            }
+            await updateDoc(docRef, updates);
+            setAppartement((prev) => ({
+                ...prev,
+                diagnostics: {
+                    ...prev.diagnostics,
+                    ...(type === 'reduced' && { dpeImageReducedUrl: null }),
+                    ...(type === 'detailed' && { dpeImageDetailedUrl: null }),
+                },
+            }));
+        } catch (err) {
+            console.error('Erreur lors de la suppression de l\'image DPE:', err);
+        }
+    };
+
     if (loading) return <p>Chargement...</p>;
 
     return (
@@ -845,15 +869,45 @@ const AppartementDetailsPage = () => {
                             </div>
                             <div className="dpe-grid">
                                 {appartement?.diagnostics?.dpeImageReducedUrl && (
-                                    <div className="dpe-card" onClick={() => { setDpePreviewUrl(appartement.diagnostics.dpeImageReducedUrl); setIsModalOpen(true); }}>
-                                        <img src={appartement.diagnostics.dpeImageReducedUrl} alt="DPE réduit" />
+                                    <div className="dpe-card">
+                                        <img
+                                            src={appartement.diagnostics.dpeImageReducedUrl}
+                                            alt="DPE réduit"
+                                            onClick={() => {
+                                                setDpePreviewUrl(appartement.diagnostics.dpeImageReducedUrl);
+                                                setIsModalOpen(true);
+                                            }}
+                                        />
                                         <span className="dpe-label">Version réduite</span>
+                                        {user && (
+                                            <button
+                                                className="delete-dpe-button"
+                                                onClick={() => handleDeleteDpeImage('reduced')}
+                                            >
+                                                Supprimer
+                                            </button>
+                                        )}
                                     </div>
                                 )}
                                 {appartement?.diagnostics?.dpeImageDetailedUrl && (
-                                    <div className="dpe-card" onClick={() => { setDpePreviewUrl(appartement.diagnostics.dpeImageDetailedUrl); setIsModalOpen(true); }}>
-                                        <img src={appartement.diagnostics.dpeImageDetailedUrl} alt="DPE détaillé" />
+                                    <div className="dpe-card">
+                                        <img
+                                            src={appartement.diagnostics.dpeImageDetailedUrl}
+                                            alt="DPE détaillé"
+                                            onClick={() => {
+                                                setDpePreviewUrl(appartement.diagnostics.dpeImageDetailedUrl);
+                                                setIsModalOpen(true);
+                                            }}
+                                        />
                                         <span className="dpe-label">Version détaillée</span>
+                                        {user && (
+                                            <button
+                                                className="delete-dpe-button"
+                                                onClick={() => handleDeleteDpeImage('detailed')}
+                                            >
+                                                Supprimer
+                                            </button>
+                                        )}
                                     </div>
                                 )}
                                 {!appartement?.diagnostics?.dpeImageReducedUrl && !appartement?.diagnostics?.dpeImageDetailedUrl && (
