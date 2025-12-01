@@ -290,6 +290,9 @@
 
 .status-pill.occupied { background: #1f2937; color: white; }
 .status-pill.available { background: #dcfce7; color: #15803d; }
+.status-pill.pending { background: #fef3c7; color: #b45309; }
+.status-pill.in-progress { background: #dbeafe; color: #1d4ed8; }
+.status-pill.completed { background: #dcfce7; color: #15803d; }
 
 .property-info-grid {
     display: grid;
@@ -317,6 +320,11 @@
     display: flex;
     gap: 0.6vw;
     flex-wrap: wrap;
+}
+
+.maintenance-card .maintenance-description {
+    margin: 0.3vw 0 0.8vw;
+    color: #4b5563;
 }
 
 .tenant-card {
@@ -565,6 +573,100 @@
 .planning-day { min-width: 9vw; font-weight: 600; color: var(--text); }
 .planning-times { color: var(--gray-600); }
 
+.etat-room-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.etat-room-header {
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.etat-add-section,
+.etat-add-entry-btn {
+    border: 1px dashed #94a3b8;
+    background: #f8fafc;
+    color: #1d4ed8;
+    padding: 0.4rem 0.8rem;
+    border-radius: 0.6rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.etat-add-section:hover,
+.etat-add-entry-btn:hover {
+    background: #eef2ff;
+}
+
+.etat-room-section {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.8rem;
+    padding: 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.etat-room-section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.etat-room-section-header input {
+    flex: 1;
+    border: 1px solid #d0d7e3;
+    border-radius: 0.6rem;
+    padding: 0.5rem 0.75rem;
+    font-weight: 600;
+}
+
+.etat-trash-btn {
+    border: none;
+    background: #fee2e2;
+    color: #b91c1c;
+    width: 32px;
+    height: 32px;
+    border-radius: 0.6rem;
+    font-size: 1.1rem;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.etat-trash-btn:hover {
+    background: #fecaca;
+}
+
+.etat-room-section h4 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.etat-room-line {
+    display: grid;
+    grid-template-columns: minmax(110px, 1fr) minmax(120px, 160px) minmax(140px, 1fr) 40px;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.etat-room-label {
+    font-weight: 600;
+    color: #374151;
+}
+
+.etat-room-line select,
+.etat-room-line input {
+    width: 100%;
+    min-height: 38px;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .owners-title { font-size: 6vw; }
@@ -582,6 +684,13 @@
     .panel-owner h2 { font-size: 4vw; }
     .panel-role { font-size: 3vw; }
     .panel-close { font-size: 8vw; }
+    .etat-room-line {
+        grid-template-columns: 1fr;
+        gap: 0.4rem;
+    }
+    .etat-room-label {
+        font-size: 0.95rem;
+    }
 }
 /* ---------- Availability badge + layout ---------- */
 .owner-availability {

@@ -1,118 +1,86 @@
-# Projet LRSIM - Gestion des Appartements
+# LesRouchons.com
 
-## Contexte du projet
-Le projet **LRSIM** vise à développer une application web permettant de gérer des appartements disponibles à la location. Cette application est destinée à simplifier la gestion des biens immobiliers, tout en offrant une interface intuitive pour les utilisateurs.
+Bienvenue sur **LesRouchons.com** ! 🌍🏠
 
----
+LesRouchons.com est une plateforme en ligne dédiée à la publication et à la recherche de logements à louer. Que vous soyez propriétaire souhaitant mettre votre bien en location ou locataire à la recherche de votre futur chez-vous, vous êtes au bon endroit !
 
-## Objectifs généraux et spécifiques
+## Table des matières
 
-### Objectifs généraux :
-- Centraliser les informations des appartements dans une application unique.
-- Permettre aux utilisateurs de consulter les détails des appartements et leur localisation.
-- Faciliter la gestion des données pour les administrateurs (ajout, modification, suppression).
+- [À propos](#à-propos)
+- [Fonctionnalités](#fonctionnalités)
+- [Technologies utilisées](#technologies-utilisées)
+- [Installation](#installation)
+- [Contribution](#contribution)
+- [Contact](#contact)
 
-### Objectifs spécifiques :
-- Intégrer une carte interactive pour afficher la localisation des appartements.
-- Permettre l'édition des informations des appartements en temps réel.
-- Ajouter des fonctionnalités de gestion des diagnostics énergétiques (DPE).
-- Offrir une expérience utilisateur fluide et moderne.
+## À propos
 
----
+LesRouchons.com a été conçu pour faciliter la mise en relation entre propriétaires et locataires. Grâce à une interface conviviale, vous pouvez facilement publier vos annonces de location ou parcourir les offres disponibles. Notre objectif est de simplifier le processus de location et de rendre la recherche d'un logement aussi agréable que possible.
 
-## Fonctionnalités attendues / User Stories
+## Fonctionnalités
 
-### Fonctionnalités principales :
-- **Consultation des appartements** : Les utilisateurs peuvent voir les détails des appartements (adresse, prix, description, etc.).
-- **Carte interactive** : Affichage de la localisation des appartements sur une carte avec possibilité d'obtenir un itinéraire.
-- **Gestion des images** : Ajout, suppression et visualisation des photos des appartements.
-- **Gestion des diagnostics énergétiques (DPE)** : Upload et affichage des diagnostics énergétiques.
-- **Modification des données** : Les administrateurs peuvent modifier les informations des appartements.
+- **Publication d'annonces** : Les propriétaires peuvent créer des annonces détaillées pour leurs logements, incluant des photos, descriptions, prix et disponibilités.
+- **Recherche avancée** : Les locataires peuvent rechercher des logements selon divers critères (emplacement, prix, nombre de chambres, etc.).
+- **Messagerie intégrée** : Communiquez directement avec les propriétaires via notre système de messagerie sécurisé.
+- **Gestion des annonces** : Les propriétaires peuvent gérer leurs annonces (modifier, supprimer, mettre à jour les informations).
+- **Évaluations et avis** : Laissez des avis sur vos expériences de location pour aider d'autres utilisateurs.
 
-### User Stories :
-1. En tant qu'utilisateur, je veux consulter les détails d'un appartement pour évaluer s'il correspond à mes besoins.
-2. En tant qu'utilisateur, je veux voir la localisation d'un appartement sur une carte pour planifier ma visite.
-3. En tant qu'administrateur, je veux pouvoir modifier les informations d'un appartement pour les tenir à jour.
-4. En tant qu'administrateur, je veux ajouter des diagnostics énergétiques pour chaque appartement.
-5. En tant qu'utilisateur, je veux pouvoir contacter le gestionnaire via un formulaire intégré.
+## Technologies utilisées
 
----
+- **Frontend** : [React](https://reactjs.org/)
+- **Backend** : [Firebase](https://firebase.google.com/) en JavaScript
+- **Base de données** : Firestore (base de données de Firebase)
+- **Hébergement** : [Firebase Hosting](https://firebase.google.com/docs/hosting)
 
-## Technologies à utiliser
-- **Frontend** : React.js, Leaflet (pour la carte interactive).
-- **Backend** : Firebase (Firestore pour la base de données, Auth pour l'authentification).
-- **API** : Nominatim (OpenStreetMap) pour le géocodage des adresses.
-- **Cloud Storage** : Cloudinary pour l'hébergement des images.
-- **CSS** : Tailwind CSS ou CSS classique pour le design.
+## Installation
 
----
+Pour installer et exécuter le projet localement, suivez ces étapes :
 
-## Contraintes techniques
-- L'application doit être responsive et accessible sur mobile.
-- Les données doivent être sécurisées (authentification Firebase).
-- Les appels API doivent être optimisés pour minimiser les temps de réponse.
-- Les images doivent être compressées avant l'upload pour réduire la consommation de bande passante.
+1. Clonez le dépôt :
+   ```bash
+   git clone "le nom du repo"
+   cd LesRouchons
+   ```
 
----
+2.  Installez les dépendances :
+    ```bash
+    npm install
+    ```
 
-## Livrables attendus
-- Une application web fonctionnelle avec toutes les fonctionnalités décrites.
-- Un code source documenté et organisé.
-- Un fichier `README.md` détaillant le projet.
-- Une documentation utilisateur pour expliquer les principales fonctionnalités.
+3.  Démarrez le serveur de développement :
+    ```
+    npm start
+    ```
 
----
+Ouvrez votre navigateur et accédez à http://localhost:3000.
 
-## Estimation de charge (temps)
-- **Analyse et conception** : 10 heures.
-- **Développement des fonctionnalités principales** : 40 heures.
-- **Tests et débogage** : 10 heures.
-- **Total estimé** : **60 heures**.
+## Contribution
 
----
+Les contributions sont les bienvenues ! Si vous souhaitez contribuer au projet, veuillez suivre ces étapes :
 
-## Organisation / étapes / jalons
-1. **Phase 1 : Analyse et conception** (2 jours)
-   - Définir les besoins fonctionnels et techniques.
-   - Concevoir l'architecture de l'application.
+Forkez le projet.
 
-2. **Phase 2 : Développement** (1 semaine)
-   - Implémenter les fonctionnalités principales.
-   - Intégrer les API et services externes.
+Créez une branche pour votre fonctionnalité ou correction de bug :
 
-3. **Phase 3 : Tests et validation** (2 jours)
-   - Effectuer des tests unitaires et d'intégration.
-   - Corriger les bugs identifiés.
+    git checkout -b feature/ma-fonctionnalité
 
-4. **Phase 4 : Documentation et livraison** (1 jour)
-   - Rédiger la documentation utilisateur et technique.
-   - Préparer la livraison du projet.
+Commitez vos modifications :
+```
+   git commit -m "Ajout de ma fonctionnalité"
+```
+Poussez vers votre fork :
+```
+   git push origin feature/ma-fonctionnalité
+```
 
----
+   Ouvrez une Pull Request sur le dépôt principal.
 
-## Équipe projet
-- **Nom** : Gabriel Rouchon
-- **Rôle** : Développeur principal.
-- **Responsabilités** :
-  - Développement frontend et backend.
-  - Intégration des API.
-  - Tests et validation.
+## Contact
 
----
+Pour toute question ou suggestion, n'hésitez pas à me contacter :
 
-## Planning / calendrier précis
-| Étape                  | Durée estimée | Dates prévues       |
-|------------------------|---------------|---------------------|
-| Analyse et conception  | 2 jours       | 01/11/2023 - 02/11/2023 |
-| Développement          | 1 semaine     | 03/11/2023 - 09/11/2023 |
-| Tests et validation    | 2 jours       | 10/11/2023 - 11/11/2023 |
-| Documentation et livraison | 1 jour    | 12/11/2023          |
+    Nom : Rouchon Gabriel
+    Email : rouchon.gabriel@gmail.com
+    Site Web : LesRouchons.com
 
----
-
-## Budget / ressources nécessaires
-- **Budget** : Aucun coût direct (utilisation de services gratuits comme Firebase et Nominatim).
-- **Ressources nécessaires** :
-  - Un ordinateur avec un environnement de développement configuré.
-  - Une connexion Internet stable.
-  - Accès aux comptes Firebase et Cloudinary.
+Merci de votre intérêt pour LesRouchons.com ! Nous espérons que notre plateforme vous aidera à trouver ou à louer votre logement idéal. 🏡✨

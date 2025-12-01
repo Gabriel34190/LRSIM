@@ -210,6 +210,51 @@ const currencyFormatter = new Intl.NumberFormat('fr-FR', {
 
 const formatCurrency = (value = 0) => currencyFormatter.format(Number(value) || 0);
 
+const ETAT_ROOM_SECTIONS = [
+  { id: 'livingRoom', label: 'Salon', items: ['Murs', 'Sol', 'Plafond', 'Fenêtres', 'Portes'] },
+  { id: 'kitchen', label: 'Cuisine', items: ['Murs', 'Sol', 'Équipements', 'Plomberie'] },
+  { id: 'bedroom1', label: 'Chambre 1', items: ['Murs', 'Sol', 'Plafond', 'Fenêtres', 'Placards'] },
+  { id: 'bedroom2', label: 'Chambre 2', items: ['Murs', 'Sol', 'Plafond', 'Fenêtres', 'Placards'] },
+  { id: 'bathroom', label: 'Salle de bain', items: ['Murs', 'Sol', 'Sanitaires', 'Plomberie'] },
+  { id: 'hall', label: 'Entrée / Couloir', items: ['Murs', 'Sol', 'Portes'] }
+];
+
+const createEtatEntry = (name = 'Élément') => ({
+  id: `entry-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+  name,
+  condition: 'Bon',
+  notes: ''
+});
+
+const createEtatSection = (label = 'Nouvelle pièce', items = []) => ({
+  id: `section-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+  label,
+  entries: items.map((item) => createEtatEntry(item))
+});
+
+const createDefaultEtatSections = () =>
+  ETAT_ROOM_SECTIONS.map((section) => createEtatSection(section.label, section.items));
+
+const buildDefaultMaintenanceForm = () => ({
+  appartementId: '',
+  tenantId: '',
+  type: '',
+  description: '',
+  priority: 'medium',
+  status: 'pending',
+  date: ''
+});
+
+const buildDefaultEtatForm = () => ({
+  appartementId: '',
+  tenantId: '',
+  type: 'Entrée',
+  scheduledDate: '',
+  status: 'Planifié',
+  notes: '',
+  sections: createDefaultEtatSections()
+});
+
 
 const Proprietaires = () => {
   const owners = [
@@ -233,14 +278,15 @@ const Proprietaires = () => {
   const [activeSection, setActiveSection] = useState('dashboard');
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [dataError, setDataError] = useState(null);
-  const [locations, setLocations] = useState([]);
   const [appartements, setAppartements] = useState([]);
   const [tenants, setTenants] = useState([]);
   const [tenantModal, setTenantModal] = useState({ open: false, appartement: null });
   const [paymentModal, setPaymentModal] = useState(false);
   const [etatModal, setEtatModal] = useState(false);
+  const [maintenanceModal, setMaintenanceModal] = useState(false);
   const [payments, setPayments] = useState([]);
   const [etats, setEtats] = useState([]);
+  const [maintenanceRequests, setMaintenanceRequests] = useState([]);
   const [tenantForm, setTenantForm] = useState({
     name: '',
     email: '',
@@ -254,6 +300,7 @@ const Proprietaires = () => {
   const [tenantSubmitting, setTenantSubmitting] = useState(false);
   const [paymentSubmitting, setPaymentSubmitting] = useState(false);
   const [etatSubmitting, setEtatSubmitting] = useState(false);
+  const [maintenanceSubmitting, setMaintenanceSubmitting] = useState(false);
   const [paymentForm, setPaymentForm] = useState({
     tenantId: '',
     amount: '',
@@ -262,14 +309,9 @@ const Proprietaires = () => {
     dueDate: ''
   });
 
-  const [etatForm, setEtatForm] = useState({
-    appartementId: '',
-    tenantId: '',
-    type: 'Entrée',
-    scheduledDate: '',
-    status: 'Planifié',
-    notes: ''
-  });
+  const [maintenanceForm, setMaintenanceForm] = useState(buildDefaultMaintenanceForm());
+
+  const [etatForm, setEtatForm] = useState(buildDefaultEtatForm());
   // maintenant actualisé toutes les 30s/60s pour rafraîchir le badge
   const [now, setNow] = useState(new Date());
   useEffect(() => {
@@ -300,7 +342,6 @@ const Proprietaires = () => {
         id: docSnap.id,
         ...docSnap.data()
       }));
-      setLocations(locationsData);
 
       // Récupérer les appartements pour chaque location, avec gestion d'erreur par location
       const flatAppartements = [];
@@ -369,6 +410,16 @@ const Proprietaires = () => {
         console.warn('Erreur récupération etatsDesLieux:', errEtats);
         setEtats([]);
       }
+
+      // Maintenance
+      try {
+        const maintenanceSnap = await getDocs(collection(db, 'maintenanceRequests'));
+        const maintenanceData = maintenanceSnap.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+        setMaintenanceRequests(maintenanceData);
+      } catch (errMaintenance) {
+        console.warn('Erreur récupération maintenanceRequests:', errMaintenance);
+        setMaintenanceRequests([]);
+      }
     } catch (error) {
       console.error('Erreur lors de la récupération des données propriétaire :', error);
       setDataError('Impossible de charger les données de gestion pour le moment.');
@@ -376,6 +427,7 @@ const Proprietaires = () => {
       setTenants([]);
       setPayments([]);
       setEtats([]);
+      setMaintenanceRequests([]);
     } finally {
       setIsLoadingData(false);
     }
@@ -418,6 +470,26 @@ const Proprietaires = () => {
     setTenantFormError('');
   };
 
+  const openMaintenanceModal = () => {
+    setMaintenanceForm(buildDefaultMaintenanceForm());
+    setMaintenanceModal(true);
+  };
+
+  const closeMaintenanceModal = () => {
+    setMaintenanceModal(false);
+    setMaintenanceForm(buildDefaultMaintenanceForm());
+  };
+
+  const openEtatModal = () => {
+    setEtatForm(buildDefaultEtatForm());
+    setEtatModal(true);
+  };
+
+  const closeEtatModal = () => {
+    setEtatModal(false);
+    setEtatForm(buildDefaultEtatForm());
+  };
+
   const closeTenantModal = () => {
     setTenantModal({ open: false, appartement: null });
     setTenantFormError('');
@@ -428,6 +500,103 @@ const Proprietaires = () => {
     setTenantForm((prev) => ({
       ...prev,
       [name]: value
+    }));
+  };
+
+  const handleMaintenanceFormChange = (e) => {
+    const { name, value } = e.target;
+    setMaintenanceForm((prev) => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleEtatFormChange = (e) => {
+    const { name, value } = e.target;
+    setEtatForm((prev) => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleEtatSectionEntryChange = (sectionId, entryName, field, value) => {
+    setEtatForm((prev) => ({
+      ...prev,
+      sections: prev.sections.map((section) => {
+        if (section.id !== sectionId) return section;
+        return {
+          ...section,
+          entries: section.entries.map((entry) =>
+            entry.id === entryName || entry.name === entryName ? { ...entry, [field]: value } : entry
+          )
+        };
+      })
+    }));
+  };
+
+  const handleEtatSectionLabelChange = (sectionId, value) => {
+    setEtatForm((prev) => ({
+      ...prev,
+      sections: prev.sections.map((section) =>
+        section.id === sectionId ? { ...section, label: value } : section
+      )
+    }));
+  };
+
+  const handleEtatEntryNameChange = (sectionId, entryId, value) => {
+    setEtatForm((prev) => ({
+      ...prev,
+      sections: prev.sections.map((section) => {
+        if (section.id !== sectionId) return section;
+        return {
+          ...section,
+          entries: section.entries.map((entry) =>
+            entry.id === entryId ? { ...entry, name: value } : entry
+          )
+        };
+      })
+    }));
+  };
+
+  const addEtatSection = () => {
+    setEtatForm((prev) => ({
+      ...prev,
+      sections: [...prev.sections, createEtatSection(`Pièce ${prev.sections.length + 1}`, ['Nouveau'])]
+    }));
+  };
+
+  const removeEtatSection = (sectionId) => {
+    setEtatForm((prev) => ({
+      ...prev,
+      sections: prev.sections.length === 1 ? prev.sections : prev.sections.filter((section) => section.id !== sectionId)
+    }));
+  };
+
+  const addEtatEntry = (sectionId) => {
+    setEtatForm((prev) => ({
+      ...prev,
+      sections: prev.sections.map((section) =>
+        section.id === sectionId
+          ? {
+              ...section,
+              entries: [
+                ...section.entries,
+                createEtatEntry(`Élément ${section.entries.length + 1}`)
+              ]
+            }
+          : section
+      )
+    }));
+  };
+
+  const removeEtatEntry = (sectionId, entryId) => {
+    setEtatForm((prev) => ({
+      ...prev,
+      sections: prev.sections.map((section) => {
+        if (section.id !== sectionId) return section;
+        if (section.entries.length === 1) return section;
+        return { ...section, entries: section.entries.filter((entry) => entry.id !== entryId) };
+      })
     }));
   };
 
@@ -496,6 +665,41 @@ const Proprietaires = () => {
       setTenantFormError("Impossible d'enregistrer le locataire. Réessayez.");
     } finally {
       setTenantSubmitting(false);
+    }
+  };
+
+  const handleMaintenanceSubmit = async (e) => {
+    e.preventDefault();
+    if (!maintenanceForm.appartementId || !maintenanceForm.type || !maintenanceForm.description) {
+      return;
+    }
+    const appartement = appartements.find((item) => item.id === maintenanceForm.appartementId);
+    if (!appartement) return;
+    const tenant = tenants.find((item) => item.id === maintenanceForm.tenantId);
+
+    try {
+      setMaintenanceSubmitting(true);
+      const payload = {
+        appartementId: appartement.id,
+        appartementName: appartement.name || appartement.locationName || 'Appartement',
+        appartementAddress: appartement.Adress || appartement.address || '',
+        tenantId: tenant?.id || null,
+        tenantName: tenant?.name || '',
+        type: maintenanceForm.type,
+        description: maintenanceForm.description,
+        priority: maintenanceForm.priority,
+        status: maintenanceForm.status,
+        date: maintenanceForm.date || new Date().toISOString().slice(0, 10),
+        createdAt: serverTimestamp()
+      };
+
+      const docRef = await addDoc(collection(db, 'maintenanceRequests'), payload);
+      setMaintenanceRequests((prev) => [{ id: docRef.id, ...payload }, ...prev]);
+      closeMaintenanceModal();
+    } catch (error) {
+      console.error('Erreur lors de la création de la maintenance :', error);
+    } finally {
+      setMaintenanceSubmitting(false);
     }
   };
 
@@ -607,11 +811,26 @@ const Proprietaires = () => {
 
   const recentPayments = paymentsRows.slice(0, 5);
 
+  const maintenanceCounts = maintenanceRequests.reduce(
+    (acc, request) => {
+      if (request.status === 'completed') acc.completed += 1;
+      else if (request.status === 'in-progress') acc.inProgress += 1;
+      else acc.pending += 1;
+      return acc;
+    },
+    { pending: 0, inProgress: 0, completed: 0 }
+  );
+
   const maintenanceSummary = [
-    { label: 'En attente', value: '—', accent: 'yellow' },
-    { label: 'En cours', value: '—', accent: 'blue' },
-    { label: 'Terminées', value: '—', accent: 'green' }
+    { label: 'Total', value: maintenanceRequests.length, accent: 'blue' },
+    { label: 'En attente', value: maintenanceCounts.pending, accent: 'yellow' },
+    { label: 'En cours', value: maintenanceCounts.inProgress, accent: 'purple' },
+    { label: 'Terminées', value: maintenanceCounts.completed, accent: 'green' }
   ];
+
+  const maintenanceList = maintenanceRequests
+    .slice()
+    .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 
   const etatsSummary = [
     { label: 'Total', value: etats.length, detail: 'États des lieux', accent: 'blue' },
@@ -869,7 +1088,7 @@ const Proprietaires = () => {
                 <h2>Maintenance</h2>
                 <p>Suivi des demandes et interventions en cours.</p>
               </div>
-              <button className="primary-btn" disabled>Nouvelle demande</button>
+              <button className="primary-btn" onClick={openMaintenanceModal}>Nouvelle demande</button>
             </div>
             <div className="management-card-grid">
               {maintenanceSummary.map((item) => (
@@ -883,7 +1102,72 @@ const Proprietaires = () => {
               <div className="panel-card-header">
                 <h3>Demandes</h3>
               </div>
-              <p className="empty-state">Connectez vos outils de maintenance pour suivre les demandes ici.</p>
+              {maintenanceList.length === 0 ? (
+                <p className="empty-state">Aucune demande de maintenance pour le moment.</p>
+              ) : (
+                <div className="properties-grid">
+                  {maintenanceList.map((request) => {
+                    const tenantName =
+                      request.tenantName ||
+                      tenants.find((tenant) => tenant.id === request.tenantId)?.name ||
+                      '—';
+                    const apartment =
+                      request.appartementName ||
+                      appartements.find((app) => app.id === request.appartementId)?.name ||
+                      request.appartementAddress ||
+                      'Appartement';
+                    const address =
+                      request.appartementAddress ||
+                      appartements.find((app) => app.id === request.appartementId)?.Adress ||
+                      'Adresse non renseignée';
+                    const priorityClass =
+                      request.priority === 'high'
+                        ? 'priority-haute'
+                        : request.priority === 'medium'
+                        ? 'priority-moyenne'
+                        : 'priority-basse';
+                    const statusLabel =
+                      request.status === 'completed'
+                        ? 'Terminé'
+                        : request.status === 'in-progress'
+                        ? 'En cours'
+                        : 'En attente';
+                    return (
+                      <div key={request.id} className="property-card maintenance-card">
+                        <div className="property-card-header">
+                          <span className="property-type">{request.type || 'Maintenance'}</span>
+                          <span className={`status-pill ${request.status}`}>
+                            {statusLabel}
+                          </span>
+                        </div>
+                        <p className="property-address">{apartment}</p>
+                        <p className="property-address">{address}</p>
+                        <p className="maintenance-description">{request.description}</p>
+                        <div className="property-info-grid">
+                          <div>
+                            <span className="info-label">Locataire</span>
+                            <span className="info-value">{tenantName}</span>
+                          </div>
+                          <div>
+                            <span className="info-label">Date</span>
+                            <span className="info-value">{request.date || '—'}</span>
+                          </div>
+                          <div>
+                            <span className="info-label">Priorité</span>
+                            <span className={`status-chip ${priorityClass}`}>
+                              {request.priority === 'high'
+                                ? 'Haute'
+                                : request.priority === 'medium'
+                                ? 'Moyenne'
+                                : 'Basse'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </>
         );
@@ -895,7 +1179,7 @@ const Proprietaires = () => {
                 <h2>États des lieux</h2>
                 <p>Suivi des états des lieux d'entrée et de sortie.</p>
               </div>
-              <button className="primary-btn" onClick={() => setEtatModal(true)}>Nouvel état des lieux</button>
+              <button className="primary-btn" onClick={openEtatModal}>Nouvel état des lieux</button>
             </div>
             <div className="management-card-grid">
               {etatsSummary.map((item) => (
@@ -1252,16 +1536,118 @@ const Proprietaires = () => {
         </>
       )}
 
+      {maintenanceModal && (
+        <>
+          <div className="modal-backdrop visible" onClick={closeMaintenanceModal} />
+          <div className="tenant-modal">
+            <div className="tenant-modal-header">
+              <div>
+                <h3>Nouvelle demande de maintenance</h3>
+                <p>Associez un logement et précisez la priorité</p>
+              </div>
+              <button className="panel-close" onClick={closeMaintenanceModal}>×</button>
+            </div>
+            <form className="tenant-form" onSubmit={handleMaintenanceSubmit}>
+              <div className="tenant-form-grid">
+                <label>
+                  Appartement *
+                  <select
+                    name="appartementId"
+                    value={maintenanceForm.appartementId}
+                    onChange={handleMaintenanceFormChange}
+                    required
+                  >
+                    <option value="">-- Sélectionner --</option>
+                    {appartements.map((appartement) => (
+                      <option key={appartement.id} value={appartement.id}>
+                        {appartement.name || appartement.locationName} • {appartement.Adress}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Locataire
+                  <select
+                    name="tenantId"
+                    value={maintenanceForm.tenantId}
+                    onChange={handleMaintenanceFormChange}
+                  >
+                    <option value="">-- Aucun --</option>
+                    {tenants.map((tenant) => (
+                      <option key={tenant.id} value={tenant.id}>
+                        {tenant.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Type de demande *
+                  <input
+                    type="text"
+                    name="type"
+                    value={maintenanceForm.type}
+                    onChange={handleMaintenanceFormChange}
+                    placeholder="Plomberie, chauffage..."
+                    required
+                  />
+                </label>
+                <label>
+                  Date d'intervention
+                  <input
+                    type="date"
+                    name="date"
+                    value={maintenanceForm.date}
+                    onChange={handleMaintenanceFormChange}
+                  />
+                </label>
+                <label>
+                  Priorité
+                  <select name="priority" value={maintenanceForm.priority} onChange={handleMaintenanceFormChange}>
+                    <option value="low">Basse</option>
+                    <option value="medium">Moyenne</option>
+                    <option value="high">Haute</option>
+                  </select>
+                </label>
+                <label>
+                  Statut
+                  <select name="status" value={maintenanceForm.status} onChange={handleMaintenanceFormChange}>
+                    <option value="pending">En attente</option>
+                    <option value="in-progress">En cours</option>
+                    <option value="completed">Terminé</option>
+                  </select>
+                </label>
+              </div>
+              <label>
+                Description *
+                <textarea
+                  name="description"
+                  value={maintenanceForm.description}
+                  onChange={handleMaintenanceFormChange}
+                  placeholder="Ajoutez le détail de la demande..."
+                  required
+                />
+              </label>
+              <div className="tenant-form-actions">
+                <button type="button" className="ghost-btn" onClick={closeMaintenanceModal}>Annuler</button>
+                <button type="submit" className="primary-btn" disabled={maintenanceSubmitting}>
+                  {maintenanceSubmitting ? 'Enregistrement...' : 'Créer'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </>
+      )}
+
       {etatModal && (
         <>
-          <div className="modal-backdrop visible" onClick={() => setEtatModal(false)} />
+          <div className="modal-backdrop visible" onClick={closeEtatModal} />
           <div className="tenant-modal">
             <div className="tenant-modal-header">
               <div>
                 <h3>Nouvel état des lieux</h3>
                 <p>Associez un logement</p>
               </div>
-              <button className="panel-close" onClick={() => setEtatModal(false)}>×</button>
+              <button className="panel-close" onClick={closeEtatModal}>×</button>
             </div>
             <form
               className="tenant-form"
@@ -1284,19 +1670,12 @@ const Proprietaires = () => {
                     scheduledDate: etatForm.scheduledDate,
                     status: etatForm.status,
                     notes: etatForm.notes,
+                    sections: etatForm.sections,
                     createdAt: serverTimestamp()
                   };
                   const docRef = await addDoc(collection(db, 'etatsDesLieux'), payload);
                   setEtats((prev) => [{ id: docRef.id, ...payload }, ...prev]);
-                  setEtatModal(false);
-                  setEtatForm({
-                    appartementId: '',
-                    tenantId: '',
-                    type: 'Entrée',
-                    scheduledDate: '',
-                    status: 'Planifié',
-                    notes: ''
-                  });
+                  closeEtatModal();
                 } catch (err) {
                   console.error('Erreur état des lieux :', err);
                 } finally {
@@ -1308,8 +1687,9 @@ const Proprietaires = () => {
                 <label>
                   Appartement *
                   <select
+                    name="appartementId"
                     value={etatForm.appartementId}
-                    onChange={(e) => setEtatForm((prev) => ({ ...prev, appartementId: e.target.value }))}
+                    onChange={handleEtatFormChange}
                     required
                   >
                     <option value="">-- Sélectionner --</option>
@@ -1323,8 +1703,9 @@ const Proprietaires = () => {
                 <label>
                   Locataire (optionnel)
                   <select
+                    name="tenantId"
                     value={etatForm.tenantId}
-                    onChange={(e) => setEtatForm((prev) => ({ ...prev, tenantId: e.target.value }))}
+                    onChange={handleEtatFormChange}
                   >
                     <option value="">-- Aucun --</option>
                     {tenants.map((tenant) => (
@@ -1336,10 +1717,7 @@ const Proprietaires = () => {
                 </label>
                 <label>
                   Type
-                  <select
-                    value={etatForm.type}
-                    onChange={(e) => setEtatForm((prev) => ({ ...prev, type: e.target.value }))}
-                  >
+                  <select name="type" value={etatForm.type} onChange={handleEtatFormChange}>
                     <option value="Entrée">Entrée</option>
                     <option value="Sortie">Sortie</option>
                   </select>
@@ -1348,33 +1726,103 @@ const Proprietaires = () => {
                   Date prévue
                   <input
                     type="date"
+                    name="scheduledDate"
                     value={etatForm.scheduledDate}
-                    onChange={(e) => setEtatForm((prev) => ({ ...prev, scheduledDate: e.target.value }))}
+                    onChange={handleEtatFormChange}
                     required
                   />
                 </label>
                 <label>
                   Statut
-                  <select
-                    value={etatForm.status}
-                    onChange={(e) => setEtatForm((prev) => ({ ...prev, status: e.target.value }))}
-                  >
+                  <select name="status" value={etatForm.status} onChange={handleEtatFormChange}>
                     <option value="Planifié">Planifié</option>
                     <option value="En cours">En cours</option>
                     <option value="Signé">Signé</option>
                   </select>
                 </label>
                 <label>
-                  Notes
+                  Notes générales
                   <textarea
+                    name="notes"
                     value={etatForm.notes}
-                    onChange={(e) => setEtatForm((prev) => ({ ...prev, notes: e.target.value }))}
+                    onChange={handleEtatFormChange}
                     placeholder="Détails importants..."
                   />
                 </label>
               </div>
+              <div className="etat-room-header">
+                <h4>État des pièces</h4>
+                <button type="button" className="etat-add-section" onClick={addEtatSection}>
+                  + Ajouter une pièce
+                </button>
+              </div>
+              <div className="etat-room-grid">
+                {etatForm.sections.map((section) => (
+                  <div key={section.id} className="etat-room-section">
+                    <div className="etat-room-section-header">
+                      <input
+                        type="text"
+                        value={section.label}
+                        onChange={(e) => handleEtatSectionLabelChange(section.id, e.target.value)}
+                        placeholder="Nom de la pièce"
+                      />
+                      <button
+                        type="button"
+                        className="etat-trash-btn"
+                        onClick={() => removeEtatSection(section.id)}
+                        aria-label="Supprimer la pièce"
+                      >
+                        ×
+                      </button>
+                    </div>
+                    {section.entries.map((entry) => (
+                      <div key={entry.id} className="etat-room-line">
+                        <input
+                          type="text"
+                          value={entry.name}
+                          onChange={(e) => handleEtatEntryNameChange(section.id, entry.id, e.target.value)}
+                          placeholder="Élément"
+                        />
+                        <select
+                          value={entry.condition}
+                          onChange={(e) =>
+                            handleEtatSectionEntryChange(section.id, entry.id, 'condition', e.target.value)
+                          }
+                        >
+                          <option value="Bon">Bon</option>
+                          <option value="Moyen">Moyen</option>
+                          <option value="Mauvais">Mauvais</option>
+                        </select>
+                        <input
+                          type="text"
+                          value={entry.notes}
+                          placeholder="Notes"
+                          onChange={(e) =>
+                            handleEtatSectionEntryChange(section.id, entry.id, 'notes', e.target.value)
+                          }
+                        />
+                        <button
+                          type="button"
+                          className="etat-trash-btn"
+                          onClick={() => removeEtatEntry(section.id, entry.id)}
+                          aria-label="Supprimer l'élément"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      className="etat-add-entry-btn"
+                      onClick={() => addEtatEntry(section.id)}
+                    >
+                      + Ajouter un élément
+                    </button>
+                  </div>
+                ))}
+              </div>
               <div className="tenant-form-actions">
-                <button type="button" className="ghost-btn" onClick={() => setEtatModal(false)}>Annuler</button>
+                <button type="button" className="ghost-btn" onClick={closeEtatModal}>Annuler</button>
                 <button type="submit" className="primary-btn" disabled={etatSubmitting}>
                   {etatSubmitting ? 'Création...' : 'Créer'}
                 </button>
