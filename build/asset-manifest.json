@@ -1,0 +1,17 @@
+{
+  "files": {
+    "main.css": "/static/css/main.1ae3e75e.css",
+    "main.js": "/static/js/main.63fbfa13.js",
+    "static/js/453.283dea91.chunk.js": "/static/js/453.283dea91.chunk.js",
+    "static/media/Lrsim_logo.png": "/static/media/Lrsim_logo.21f837c97c37a0f4bb47.png",
+    "static/media/Montpellier.jpeg": "/static/media/Montpellier.c2f6a305ac78dd573544.jpeg",
+    "index.html": "/index.html",
+    "main.1ae3e75e.css.map": "/static/css/main.1ae3e75e.css.map",
+    "main.63fbfa13.js.map": "/static/js/main.63fbfa13.js.map",
+    "453.283dea91.chunk.js.map": "/static/js/453.283dea91.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.1ae3e75e.css",
+    "static/js/main.63fbfa13.js"
+  ]
+}
