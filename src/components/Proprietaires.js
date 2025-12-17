@@ -3,6 +3,8 @@ import '../css/Proprietaires.css';
 import PhotoSandra from '../images/pion_gaby.jpg';
 import Navbar from './Navbar';
 import { auth } from './firebase-config';
+import * as ownerDataService from '../services/ownerDataService';
+import * as firebaseService from '../services/firebaseService';
 import {
   AlertCircle,
   ArrowLeft,
@@ -15,7 +17,8 @@ import {
   TrendingUp,
   Users,
   Wand2,
-  X
+  X,
+  AlertTriangle
 } from 'lucide-react';
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
@@ -303,11 +306,94 @@ const defaultHistory = {
   ]
 };
 
+const initialData = {
+  properties: defaultProperties,
+  tenants: defaultTenants,
+  payments: defaultPayments,
+  maintenance: defaultMaintenance,
+  inspections: defaultInspections,
+  history: defaultHistory
+};
+
+const STORAGE_SECRET = process.env.REACT_APP_OWNER_DATA_SECRET || 'lrsim-owner-dev-secret';
+
+const createId = (prefix) => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+};
+
+const mergeData = (payload = {}) => ({
+  properties: payload.properties || initialData.properties,
+  tenants: payload.tenants || initialData.tenants,
+  payments: payload.payments || initialData.payments,
+  maintenance: payload.maintenance || initialData.maintenance,
+  inspections: payload.inspections || initialData.inspections,
+  history: payload.history || initialData.history
+});
+
+const getPropertyLabel = (p) => {
+  if (!p) return 'Non renseigné';
+  return p.title || p.name || p.address || `Bien ${p.id}`;
+};
+
+const monthNames = ['Janv.', 'Févr.', 'Mars', 'Avr.', 'Mai', 'Juin', 'Juil.', 'Août', 'Sept.', 'Oct.', 'Nov.', 'Déc.'];
+
+const getMonthKey = (date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  return `${y}-${m}`;
+};
+
+const formatMonthLabel = (date) => `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+
+const buildLeaseCalendar = (tenant) => {
+  if (!tenant?.leaseStart || !tenant?.leaseEnd) return [];
+  const start = new Date(tenant.leaseStart);
+  const end = new Date(tenant.leaseEnd);
+  start.setDate(1);
+  end.setDate(1);
+  const months = [];
+  const cursor = new Date(start);
+  while (cursor <= end) {
+    months.push({
+      monthKey: getMonthKey(cursor),
+      label: formatMonthLabel(cursor),
+      amount: tenant.rent
+    });
+    cursor.setMonth(cursor.getMonth() + 1);
+  }
+  return months;
+};
+
 const TabButton = ({ id, icon: Icon, label, active, onClick }) => (
   <button className={`tab-trigger ${active ? 'active' : ''}`} onClick={() => onClick(id)}>
     <Icon size={16} />
     <span>{label}</span>
   </button>
+);
+
+// Composant pour afficher les erreurs
+const ErrorAlert = ({ message, onClose }) => {
+  if (!message) return null;
+  return (
+    <div className="error-alert">
+      <div className="error-content">
+        <AlertTriangle size={16} />
+        <span>{message}</span>
+      </div>
+      <button onClick={onClose} className="error-close">×</button>
+    </div>
+  );
+};
+
+// Composant pour afficher les états de chargement
+const LoadingSpinner = () => (
+  <div className="loading-spinner">
+    <div className="spinner-dot"></div>
+    Chargement...
+  </div>
 );
 
 const Proprietaires = () => {
@@ -327,59 +413,61 @@ const Proprietaires = () => {
   ];
 
   const isAuthenticated = !!auth.currentUser;
+  const currentUserId = auth.currentUser?.uid;
 
+  // States
   const [selectedOwner, setSelectedOwner] = useState(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [now, setNow] = useState(new Date());
 
-  // Admin data states
+  // Admin data states (Firebase)
   const [tab, setTab] = useState('dashboard');
-  const [properties, setProperties] = useState(defaultProperties);
-  const [tenants, setTenants] = useState(defaultTenants);
-  const [payments, setPayments] = useState(defaultPayments);
-  const [maintenance, setMaintenance] = useState(defaultMaintenance);
-  const [inspections, setInspections] = useState(defaultInspections);
-  const [history, setHistory] = useState(defaultHistory);
+  const [properties, setProperties] = useState(initialData.properties);
+  const [tenants, setTenants] = useState(initialData.tenants);
+  const [payments, setPayments] = useState(initialData.payments);
+  const [maintenance, setMaintenance] = useState(initialData.maintenance);
+  const [inspections, setInspections] = useState(initialData.inspections);
+  const [history, setHistory] = useState(initialData.history);
 
-  const [propertyModal, setPropertyModal] = useState(false);
+  // Loading & Error states
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  // Modal states
   const [tenantModal, setTenantModal] = useState(false);
   const [paymentModal, setPaymentModal] = useState(false);
   const [maintenanceModal, setMaintenanceModal] = useState(false);
   const [inspectionModal, setInspectionModal] = useState(false);
   const [historyModal, setHistoryModal] = useState(null);
+  const [editingTenantId, setEditingTenantId] = useState(null);
+  const [editingMaintenanceId, setEditingMaintenanceId] = useState(null);
+  const [editingInspectionId, setEditingInspectionId] = useState(null);
+  const [propertySelectModal, setPropertySelectModal] = useState(null); // { tenantId, propertyId }
 
-  const [propertyForm, setPropertyForm] = useState({
-    address: '',
-    type: 'Appartement',
-    surface: 60,
-    rent: 900,
-    status: 'disponible',
-    bedrooms: 2,
-    bathrooms: 1
-  });
-
+  // Form states
   const [tenantForm, setTenantForm] = useState({
     name: '',
     email: '',
     phone: '',
-    propertyId: 'p1',
+    propertyId: '',
     leaseStart: '',
     leaseEnd: '',
     rent: 900
   });
 
   const [paymentForm, setPaymentForm] = useState({
-    tenantId: 't1',
-    propertyId: 'p1',
+    tenantId: '',
+    propertyId: '',
     amount: 900,
-    period: 'Mars 2025',
-    dueDate: '2025-03-05',
+    period: '',
+    dueDate: '',
     status: 'attente'
   });
 
   const [maintenanceForm, setMaintenanceForm] = useState({
-    propertyId: 'p1',
-    tenantId: 't1',
+    propertyId: '',
+    tenantId: '',
     type: 'Plomberie',
     description: '',
     priority: 'Moyenne',
@@ -387,16 +475,89 @@ const Proprietaires = () => {
   });
 
   const [inspectionForm, setInspectionForm] = useState({
-    propertyId: 'p1',
-    tenantId: 't1',
+    propertyId: '',
+    tenantId: '',
     type: 'Entrée',
     date: '',
     status: 'En attente'
   });
 
   const [paymentFilter, setPaymentFilter] = useState('Tous');
+  const [paymentView, setPaymentView] = useState('liste'); // liste | parLocataire
+  const [selectedPaymentTenantId, setSelectedPaymentTenantId] = useState(null);
   const [selectedHistoryTenant, setSelectedHistoryTenant] = useState(null);
   const [partialAmount, setPartialAmount] = useState('');
+
+  const applyDataToState = (data) => {
+    const merged = mergeData(data);
+    setProperties(merged.properties);
+    setTenants(merged.tenants);
+    setPayments(merged.payments);
+    setMaintenance(merged.maintenance);
+    setInspections(merged.inspections);
+    setHistory(merged.history);
+  };
+
+  const getSnapshot = () => ({
+    properties,
+    tenants,
+    payments,
+    maintenance,
+    inspections,
+    history
+  });
+
+  const loadAllData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // 1) Charger les propriétés depuis Firebase (source de vérité pour leurs titres)
+      let remoteProperties = [];
+      try {
+        if (currentUserId) {
+          remoteProperties = await firebaseService.getProperties(currentUserId);
+        }
+      } catch (err) {
+        console.warn('Propriétés Firebase non disponibles, fallback local.', err);
+      }
+
+      // 2) Charger le reste des données chiffrées locales
+      const stored = await ownerDataService.loadOwnerData(currentUserId, initialData, STORAGE_SECRET);
+
+      // 3) Fusion : propriétés issues de Firebase si présentes, sinon fallback stocké ou initial
+      const merged = {
+        ...stored,
+        properties: (remoteProperties && remoteProperties.length) ? remoteProperties : (stored.properties || initialData.properties)
+      };
+      applyDataToState(merged);
+      // Sauvegarder avec la source de vérité pour garder cohérent le local
+      await ownerDataService.saveOwnerData(currentUserId, merged, STORAGE_SECRET);
+    } catch (err) {
+      console.error('Erreur lors du chargement des données:', err);
+      setError('Impossible de charger les données locales. Les valeurs par défaut sont utilisées.');
+      applyDataToState(initialData);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const persistData = async (nextData) => {
+    const merged = mergeData(nextData);
+    try {
+      await ownerDataService.saveOwnerData(currentUserId, merged, STORAGE_SECRET);
+    } catch (err) {
+      console.error('Erreur lors de la sauvegarde locale:', err);
+      setError("Sauvegarde locale impossible. Vérifiez l'espace de stockage ou les droits.");
+    }
+    applyDataToState(merged);
+  };
+
+  // Charger les données au montage
+  useEffect(() => {
+    if (isAuthenticated && currentUserId) {
+      loadAllData();
+    }
+  }, [isAuthenticated, currentUserId]);
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60 * 1000);
@@ -410,6 +571,24 @@ const Proprietaires = () => {
       document.body.classList.remove('body-blurred');
     }
   }, [isPanelOpen, isAuthenticated]);
+
+  useEffect(() => {
+    if (properties.length && !tenantForm.propertyId) {
+      setTenantForm((prev) => ({ ...prev, propertyId: properties[0].id }));
+    }
+    if (properties.length && !paymentForm.propertyId) {
+      setPaymentForm((prev) => ({ ...prev, propertyId: properties[0].id }));
+    }
+    if (tenants.length && !paymentForm.tenantId) {
+      setPaymentForm((prev) => ({ ...prev, tenantId: tenants[0].id }));
+    }
+    if (properties.length && !maintenanceForm.propertyId) {
+      setMaintenanceForm((prev) => ({ ...prev, propertyId: properties[0].id }));
+    }
+    if (properties.length && !inspectionForm.propertyId) {
+      setInspectionForm((prev) => ({ ...prev, propertyId: properties[0].id }));
+    }
+  }, [properties, tenants]);
 
   const handleOwnerClick = (owner) => {
     setSelectedOwner(owner);
@@ -449,46 +628,203 @@ const Proprietaires = () => {
   const getProperty = (id) => properties.find((p) => p.id === id);
   const getTenant = (id) => tenants.find((t) => t.id === id);
 
-  const addProperty = () => {
-    setProperties([...properties, { ...propertyForm, id: `p-${Date.now()}` }]);
-    setPropertyModal(false);
-    setPropertyForm({ ...propertyForm, address: '', surface: 60, rent: 900, status: 'disponible' });
+  // CRUD Operations avec stockage local chiffré
+  const openTenantModal = (tenant) => {
+    if (tenant) {
+      setTenantForm(tenant);
+      setEditingTenantId(tenant.id);
+    } else {
+      setTenantForm({ name: '', email: '', phone: '', propertyId: properties[0]?.id || '', leaseStart: '', leaseEnd: '', rent: 900 });
+      setEditingTenantId(null);
+    }
+    setTenantModal(true);
   };
 
-  const addTenant = () => {
-    setTenants([...tenants, { ...tenantForm, id: `t-${Date.now()}` }]);
-    setTenantModal(false);
-    setTenantForm({ ...tenantForm, name: '', email: '', phone: '' });
+  const addOrUpdateTenant = async () => {
+    if (!tenantForm.name || !tenantForm.email || !tenantForm.phone || !tenantForm.propertyId) {
+      setError('Tous les champs sont obligatoires');
+      return;
+    }
+    setActionLoading(true);
+    try {
+      const snapshot = getSnapshot();
+      const nextTenants = editingTenantId
+        ? snapshot.tenants.map((t) => (t.id === editingTenantId ? { ...tenantForm, id: editingTenantId } : t))
+        : [...snapshot.tenants, { id: createId('tenant'), ...tenantForm }];
+      const nextData = { ...snapshot, tenants: nextTenants };
+      await persistData(nextData);
+      setTenantModal(false);
+      setEditingTenantId(null);
+      setTenantForm({ name: '', email: '', phone: '', propertyId: properties[0]?.id || '', leaseStart: '', leaseEnd: '', rent: 900 });
+      setError(null);
+    } catch (err) {
+      setError(`Erreur lors de l'ajout du locataire: ${err.message}`);
+    } finally {
+      setActionLoading(false);
+    }
   };
 
-  const addPayment = () => {
-    setPayments([...payments, { ...paymentForm, id: `pay-${Date.now()}` }]);
-    setPaymentModal(false);
+  const deleteTenant = async (tenantId) => {
+    if (!window.confirm('Supprimer ce locataire ?')) return;
+    const snapshot = getSnapshot();
+    const nextData = {
+      ...snapshot,
+      tenants: snapshot.tenants.filter((t) => t.id !== tenantId),
+      payments: snapshot.payments.filter((p) => p.tenantId !== tenantId),
+      maintenance: snapshot.maintenance.map((m) => (m.tenantId === tenantId ? { ...m, tenantId: '' } : m)),
+      inspections: snapshot.inspections.map((i) => (i.tenantId === tenantId ? { ...i, tenantId: '' } : i)),
+      history: Object.fromEntries(Object.entries(snapshot.history || {}).filter(([k]) => k !== tenantId))
+    };
+    await persistData(nextData);
   };
 
-  const addMaintenance = () => {
-    setMaintenance([...maintenance, { ...maintenanceForm, id: `m-${Date.now()}`, createdAt: new Date().toISOString().slice(0, 10) }]);
-    setMaintenanceModal(false);
-    setMaintenanceForm({ ...maintenanceForm, description: '' });
-  };
-
-  const addInspection = () => {
-    setInspections([...inspections, { ...inspectionForm, id: `i-${Date.now()}`, sections: {} }]);
-    setInspectionModal(false);
-  };
-
-  const updateHistoryStatus = (tenantId, monthIdx, status, amount) => {
-    setHistory((prev) => {
-      const items = prev[tenantId] ? [...prev[tenantId]] : [];
-      if (items[monthIdx]) {
-        items[monthIdx] = {
-          ...items[monthIdx],
-          status,
-          ...(status === 'partiel' && amount ? { amountPaid: amount } : {})
-        };
-      }
-      return { ...prev, [tenantId]: items };
+  const openPropertySelectModal = (tenant) => {
+    setPropertySelectModal({
+      tenantId: tenant.id,
+      propertyId: tenant.propertyId || properties[0]?.id || ''
     });
+  };
+
+  const assignPropertyToTenant = async () => {
+    if (!propertySelectModal?.tenantId) return;
+    const snapshot = getSnapshot();
+    const nextTenants = snapshot.tenants.map((t) =>
+      t.id === propertySelectModal.tenantId ? { ...t, propertyId: propertySelectModal.propertyId } : t
+    );
+    const nextData = { ...snapshot, tenants: nextTenants };
+    await persistData(nextData);
+    setPropertySelectModal(null);
+  };
+
+  const addPayment = async () => {
+    if (!paymentForm.tenantId || !paymentForm.propertyId || !paymentForm.amount || !paymentForm.period) {
+      setError('Tous les champs sont obligatoires');
+      return;
+    }
+    setActionLoading(true);
+    try {
+      const newPayment = {
+        id: createId('payment'),
+        ...paymentForm
+      };
+      const nextData = { ...getSnapshot(), payments: [...payments, newPayment] };
+      await persistData(nextData);
+      setPaymentModal(false);
+      setPaymentForm({ tenantId: '', propertyId: '', amount: 900, period: '', dueDate: '', status: 'attente' });
+      setError(null);
+    } catch (err) {
+      setError(`Erreur lors de l'ajout du paiement: ${err.message}`);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const openMaintenanceModal = (item) => {
+    if (item) {
+      setMaintenanceForm(item);
+      setEditingMaintenanceId(item.id);
+    } else {
+      setMaintenanceForm({ propertyId: properties[0]?.id || '', tenantId: '', type: 'Plomberie', description: '', priority: 'Moyenne', status: 'En attente' });
+      setEditingMaintenanceId(null);
+    }
+    setMaintenanceModal(true);
+  };
+
+  const addOrUpdateMaintenance = async () => {
+    if (!maintenanceForm.propertyId || !maintenanceForm.description) {
+      setError('La propriété et la description sont obligatoires');
+      return;
+    }
+    setActionLoading(true);
+    try {
+      const snapshot = getSnapshot();
+      const baseItem = {
+        ...maintenanceForm,
+        createdAt: maintenanceForm.createdAt || new Date().toISOString().slice(0, 10)
+      };
+      const nextMaintenance = editingMaintenanceId
+        ? snapshot.maintenance.map((m) => (m.id === editingMaintenanceId ? { ...baseItem, id: editingMaintenanceId } : m))
+        : [...snapshot.maintenance, { ...baseItem, id: createId('maintenance') }];
+      const nextData = { ...snapshot, maintenance: nextMaintenance };
+      await persistData(nextData);
+      setMaintenanceModal(false);
+      setEditingMaintenanceId(null);
+      setMaintenanceForm({ propertyId: '', tenantId: '', type: 'Plomberie', description: '', priority: 'Moyenne', status: 'En attente' });
+      setError(null);
+    } catch (err) {
+      setError(`Erreur lors de l'ajout de la demande: ${err.message}`);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const deleteMaintenance = async (maintenanceId) => {
+    if (!window.confirm('Supprimer cette demande de maintenance ?')) return;
+    const snapshot = getSnapshot();
+    const nextData = { ...snapshot, maintenance: snapshot.maintenance.filter((m) => m.id !== maintenanceId) };
+    await persistData(nextData);
+  };
+
+  const openInspectionModal = (item) => {
+    if (item) {
+      setInspectionForm(item);
+      setEditingInspectionId(item.id);
+    } else {
+      setInspectionForm({ propertyId: properties[0]?.id || '', tenantId: '', type: 'Entrée', date: '', status: 'En attente' });
+      setEditingInspectionId(null);
+    }
+    setInspectionModal(true);
+  };
+
+  const addOrUpdateInspection = async () => {
+    if (!inspectionForm.propertyId || !inspectionForm.date) {
+      setError('La propriété et la date sont obligatoires');
+      return;
+    }
+    setActionLoading(true);
+    try {
+      const snapshot = getSnapshot();
+      const baseItem = { ...inspectionForm, sections: inspectionForm.sections || {} };
+      const nextInspections = editingInspectionId
+        ? snapshot.inspections.map((i) => (i.id === editingInspectionId ? { ...baseItem, id: editingInspectionId } : i))
+        : [...snapshot.inspections, { ...baseItem, id: createId('inspection') }];
+      const nextData = { ...snapshot, inspections: nextInspections };
+      await persistData(nextData);
+      setInspectionModal(false);
+      setEditingInspectionId(null);
+      setInspectionForm({ propertyId: '', tenantId: '', type: 'Entrée', date: '', status: 'En attente' });
+      setError(null);
+    } catch (err) {
+      setError(`Erreur lors de l'ajout de l'état des lieux: ${err.message}`);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const deleteInspection = async (inspectionId) => {
+    if (!window.confirm("Supprimer cet état des lieux ?")) return;
+    const snapshot = getSnapshot();
+    const nextData = { ...snapshot, inspections: snapshot.inspections.filter((i) => i.id !== inspectionId) };
+    await persistData(nextData);
+  };
+
+  const updateHistoryStatus = (tenantId, monthKey, status, amount) => {
+    const snapshot = getSnapshot();
+    const items = snapshot.history[tenantId] ? [...snapshot.history[tenantId]] : [];
+    const idx = items.findIndex((m) => m.monthKey === monthKey || m.month === monthKey);
+    const base = idx >= 0 ? items[idx] : { month: monthKey, monthKey, amount: tenants.find((t) => t.id === tenantId)?.rent || 0 };
+    const nextEntry = {
+      ...base,
+      status,
+      ...(status === 'partiel' && amount ? { amountPaid: amount } : { amountPaid: undefined })
+    };
+    if (idx >= 0) {
+      items[idx] = nextEntry;
+    } else {
+      items.push(nextEntry);
+    }
+    const nextData = { ...snapshot, history: { ...snapshot.history, [tenantId]: items } };
+    persistData(nextData);
     setHistoryModal(null);
     setPartialAmount('');
   };
@@ -598,7 +934,6 @@ const Proprietaires = () => {
         <h3>Gestion des propriétés</h3>
         <p className="muted">Adresse, type, surface, loyers et statuts</p>
       </div>
-      <Button onClick={() => setPropertyModal(true)}><Plus size={16} /> Ajouter un bien</Button>
 
       <div className="grid grid-3 margin-top">
         {properties.map((p) => (
@@ -624,7 +959,7 @@ const Proprietaires = () => {
         <h3>Gestion des locataires</h3>
         <p className="muted">Baux, contacts et loyers</p>
       </div>
-      <Button onClick={() => setTenantModal(true)}><Plus size={16} /> Ajouter un locataire</Button>
+      <Button onClick={() => openTenantModal()}><Plus size={16} /> Ajouter un locataire</Button>
 
       <div className="grid grid-3 margin-top">
         {tenants.map((t) => (
@@ -637,51 +972,58 @@ const Proprietaires = () => {
               <Badge variant="soft">{t.phone}</Badge>
             </CardHeader>
             <CardContent className="tenant-meta">
-              <div className="muted">{getProperty(t.propertyId)?.address}</div>
+              <div className="muted">
+                Bien : {(() => {
+                  const p = getProperty(t.propertyId);
+                  if (!p) return t.propertyId || 'Non renseigné';
+                  return `${getPropertyLabel(p)}${p.surface ? ` · ${p.surface} m²` : ''} · ID ${p.id}`;
+                })()}
+              </div>
               <div>Bail : {t.leaseStart} → {t.leaseEnd}</div>
               <div className="rent-line">{t.rent} € / mois</div>
             </CardContent>
+            <div className="card-actions">
+              <Button variant="ghost" onClick={() => openTenantModal(t)}>Éditer</Button>
+              <Button variant="ghost" onClick={() => openPropertySelectModal(t)}>Changer de bien</Button>
+              <Button variant="ghost" onClick={() => deleteTenant(t.id)}>Supprimer</Button>
+            </div>
           </Card>
         ))}
       </div>
     </div>
   );
 
-  const renderPayments = () => (
-    <div className="module-header">
-      <div className="stats-row">
-        <Card>
-          <CardTitle>Total payé</CardTitle>
-          <div className="metric-value small">{payments.filter((p) => p.status === 'payé').reduce((s, p) => s + p.amount, 0)} €</div>
-        </Card>
-        <Card>
-          <CardTitle>En attente</CardTitle>
-          <div className="metric-value small">{paymentsByStatus.attente}</div>
-        </Card>
-        <Card>
-          <CardTitle>En retard</CardTitle>
-          <div className="metric-value small">{paymentsByStatus.retard}</div>
-        </Card>
-        <Card>
-          <CardTitle>Total</CardTitle>
-          <div className="metric-value small">{payments.length}</div>
-        </Card>
-      </div>
-      <div className="actions-row">
-        <div className="filter-chips">
-          {['Tous', 'payé', 'attente', 'retard', 'partiel'].map((s) => (
-            <Button
-              key={s}
-              variant={paymentFilter === s ? 'primary' : 'ghost'}
-              onClick={() => setPaymentFilter(s)}
-            >
-              {s === 'Tous' ? 'Tous' : s.charAt(0).toUpperCase() + s.slice(1)}
-            </Button>
-          ))}
-        </div>
-        <Button onClick={() => setPaymentModal(true)}><Plus size={16} /> Nouveau paiement</Button>
-      </div>
+  const renderPayments = () => {
+    const statusPalette = {
+      payé: { color: '#166534', bg: '#dcfce7' },
+      attente: { color: '#92400e', bg: '#fef3c7' },
+      retard: { color: '#991b1b', bg: '#fee2e2' },
+      partiel: { color: '#c2410c', bg: '#ffedd5' }
+    };
 
+    const handleChipClick = (label) => {
+      if (label === 'Par locataire') {
+        setPaymentView('parLocataire');
+        // sélectionner par défaut le premier locataire si disponible
+        if (tenants.length > 0) {
+          setSelectedPaymentTenantId((prev) => prev || tenants[0].id);
+        } else {
+          setSelectedPaymentTenantId(null);
+        }
+        setPaymentFilter('Tous');
+      } else {
+        setPaymentView('liste');
+        const map = {
+          Tous: 'Tous',
+          Payés: 'payé',
+          'En attente': 'attente',
+          'En retard': 'retard'
+        };
+        setPaymentFilter(map[label] || 'Tous');
+      }
+    };
+
+    const renderListe = () => (
       <div className="table">
         <div className="table-head">
           <div>Locataire</div>
@@ -694,7 +1036,7 @@ const Proprietaires = () => {
         {filteredPayments.map((p) => (
           <div className="table-row" key={p.id}>
             <div>{getTenant(p.tenantId)?.name}</div>
-            <div className="muted">{getProperty(p.propertyId)?.address}</div>
+            <div className="muted">{getPropertyLabel(getProperty(p.propertyId))}</div>
             <div>{p.amount} €</div>
             <div>{p.period}</div>
             <div>{p.dueDate}</div>
@@ -702,8 +1044,212 @@ const Proprietaires = () => {
           </div>
         ))}
       </div>
-    </div>
-  );
+    );
+
+    const renderParLocataireList = () => (
+      <div className="payment-tenant-list margin-top">
+        <p className="muted">Sélectionnez un locataire</p>
+        <div className="grid grid-3 margin-top">
+          {tenants.map((t) => {
+            const prop = getProperty(t.propertyId);
+            const months = buildLeaseCalendar(t);
+            const hist = history[t.id] || [];
+            const paid = hist.filter((m) => m.status === 'payé').length;
+            const rate = months.length ? Math.round((paid / months.length) * 100) : 0;
+            return (
+              <Card
+                key={t.id}
+                className="clickable"
+                onClick={() => {
+                  setTab('history');
+                  setSelectedHistoryTenant(t.id);
+                }}
+              >
+                <CardHeader className="card-row">
+                  <div>
+                    <CardTitle>{t.name}</CardTitle>
+                    <CardDescription>{getPropertyLabel(prop)}</CardDescription>
+                  </div>
+                  <Badge variant="soft">{t.rent} € / mois</Badge>
+                </CardHeader>
+                <CardContent className="muted">
+                  <div>Taux de paiement : {rate}%</div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      </div>
+    );
+
+    const renderParLocataireDetail = () => {
+      const tenant = tenants.find((t) => t.id === selectedPaymentTenantId);
+      if (!tenant) return null;
+      const prop = getProperty(tenant.propertyId);
+      const months = buildLeaseCalendar(tenant);
+      const hist = history[tenant.id] || [];
+      const paid = hist.filter((m) => m.status === 'payé').length;
+      const waiting = hist.filter((m) => m.status === 'attente').length + Math.max(months.length - hist.length, 0);
+      const late = hist.filter((m) => m.status === 'retard').length;
+      const rate = months.length ? Math.round((paid / months.length) * 100) : 0;
+
+      return (
+        <div className="payment-tenant-detail margin-top">
+          <Button variant="ghost" onClick={() => setSelectedPaymentTenantId(null)}>
+            <ArrowLeft size={16} /> Retour à la liste
+          </Button>
+
+          <h3 style={{ marginTop: 16 }}>{tenant.name}</h3>
+
+          <div className="grid grid-4 margin-top">
+            <Card>
+              <CardTitle>Propriété</CardTitle>
+              <CardContent className="muted">
+                <div>{getPropertyLabel(prop)}</div>
+                <div style={{ marginTop: 4 }}>{prop?.address}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardTitle>Loyer mensuel</CardTitle>
+              <CardContent className="metric">
+                <div className="metric-value small">{tenant.rent} €</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardTitle>Début du bail</CardTitle>
+              <CardContent className="metric">
+                <div className="metric-value small">{tenant.leaseStart || '-'}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardTitle>Fin du bail</CardTitle>
+              <CardContent className="metric">
+                <div className="metric-value small">{tenant.leaseEnd || '-'}</div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-4 margin-top">
+            <Card>
+              <CardTitle>Taux de paiement</CardTitle>
+              <CardContent className="metric">
+                <div className="metric-value small">{rate}%</div>
+                <div className="metric-sub">{paid}/{months.length} mois payés</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardTitle>Payés</CardTitle>
+              <CardContent className="metric">
+                <div className="metric-value small">{paid}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardTitle>En attente</CardTitle>
+              <CardContent className="metric">
+                <div className="metric-value small">{waiting}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardTitle>En retard</CardTitle>
+              <CardContent className="metric">
+                <div className="metric-value small">{late}</div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <h4 className="margin-top">Calendrier des paiements</h4>
+          <div className="payment-calendar-grid margin-top">
+            {months.map((m) => {
+              const entry = hist.find((e) => (e.monthKey || e.month) === m.monthKey) || { status: 'attente', amount: m.amount };
+              const palette = statusPalette[entry.status] || statusPalette.attente;
+              return (
+                <div
+                  key={`${tenant.id}-${m.monthKey}`}
+                  className="payment-month-card"
+                  style={{ borderColor: palette.color, backgroundColor: palette.bg }}
+                >
+                  <div className="payment-month-header">
+                    <span>{m.label}</span>
+                    <StatusBadge status={entry.status} />
+                  </div>
+                  <div className="muted small">{m.amount} €</div>
+                  {entry.status === 'partiel' && entry.amountPaid != null && (
+                    <div className="muted small">Payé : {entry.amountPaid} €</div>
+                  )}
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setPartialAmount(entry.amountPaid ? String(entry.amountPaid) : '');
+                      setHistoryModal({ tenantId: tenant.id, monthKey: m.monthKey, current: entry });
+                    }}
+                    style={{ marginTop: 8 }}
+                  >
+                    Modifier
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="muted small" style={{ marginTop: 16 }}>
+            Légende :{' '}
+            <span>Payé</span> · <span>Paiement partiel</span> · <span>En attente</span> · <span>En retard</span>
+          </div>
+        </div>
+      );
+    };
+
+    return (
+      <div className="module-header">
+        <div className="stats-row">
+          <Card>
+            <CardTitle>Total payé</CardTitle>
+            <div className="metric-value small">{payments.filter((p) => p.status === 'payé').reduce((s, p) => s + p.amount, 0)} €</div>
+          </Card>
+          <Card>
+            <CardTitle>En attente</CardTitle>
+            <div className="metric-value small">{paymentsByStatus.attente}</div>
+          </Card>
+          <Card>
+            <CardTitle>En retard</CardTitle>
+            <div className="metric-value small">{paymentsByStatus.retard}</div>
+          </Card>
+          <Card>
+            <CardTitle>Total</CardTitle>
+            <div className="metric-value small">{payments.length}</div>
+          </Card>
+        </div>
+        <div className="actions-row">
+          <div className="filter-chips">
+            {['Tous', 'Payés', 'En attente', 'En retard', 'Par locataire'].map((label) => (
+              <Button
+                key={label}
+                variant={
+                  (label === 'Par locataire' && paymentView === 'parLocataire') ||
+                  (label !== 'Par locataire' && paymentView === 'liste' && (
+                    (label === 'Tous' && paymentFilter === 'Tous') ||
+                    (label === 'Payés' && paymentFilter === 'payé') ||
+                    (label === 'En attente' && paymentFilter === 'attente') ||
+                    (label === 'En retard' && paymentFilter === 'retard')
+                  ))
+                    ? 'primary'
+                    : 'ghost'
+                }
+                onClick={() => handleChipClick(label)}
+              >
+                {label}
+              </Button>
+            ))}
+          </div>
+          <Button onClick={() => setPaymentModal(true)}><Plus size={16} /> Nouveau paiement</Button>
+        </div>
+
+        {paymentView === 'liste' && renderListe()}
+        {paymentView === 'parLocataire' && !selectedPaymentTenantId && renderParLocataireList()}
+        {paymentView === 'parLocataire' && selectedPaymentTenantId && renderParLocataireDetail()}
+      </div>
+    );
+  };
 
   const renderMaintenance = () => (
     <div className="module-header">
@@ -711,7 +1257,7 @@ const Proprietaires = () => {
         <h3>Maintenance</h3>
         <p className="muted">Suivi des demandes</p>
       </div>
-      <Button onClick={() => setMaintenanceModal(true)}><Plus size={16} /> Nouvelle demande</Button>
+      <Button onClick={() => openMaintenanceModal()}><Plus size={16} /> Nouvelle demande</Button>
 
       <div className="grid grid-3 margin-top">
         {maintenance.map((m) => (
@@ -727,6 +1273,10 @@ const Proprietaires = () => {
               <div>Créée : {m.createdAt}</div>
               <div className="muted">{m.description}</div>
             </CardContent>
+            <div className="card-actions">
+              <Button variant="ghost" onClick={() => openMaintenanceModal(m)}>Éditer</Button>
+              <Button variant="ghost" onClick={() => deleteMaintenance(m.id)}>Supprimer</Button>
+            </div>
           </Card>
         ))}
       </div>
@@ -739,7 +1289,7 @@ const Proprietaires = () => {
         <h3>États des lieux</h3>
         <p className="muted">Entrées / sorties</p>
       </div>
-      <Button onClick={() => setInspectionModal(true)}><Plus size={16} /> Ajouter</Button>
+      <Button onClick={() => openInspectionModal()}><Plus size={16} /> Ajouter</Button>
 
       <div className="grid grid-3 margin-top">
         {inspections.map((i) => (
@@ -754,6 +1304,10 @@ const Proprietaires = () => {
               <div>Date : {i.date}</div>
               <div className="muted">Sections détaillées prêtes (simulation)</div>
             </CardContent>
+            <div className="card-actions">
+              <Button variant="ghost" onClick={() => openInspectionModal(i)}>Éditer</Button>
+              <Button variant="ghost" onClick={() => deleteInspection(i.id)}>Supprimer</Button>
+            </div>
           </Card>
         ))}
       </div>
@@ -819,7 +1373,7 @@ const Proprietaires = () => {
                   {m.status === 'partiel' && m.amountPaid && <div>Payé : {m.amountPaid} €</div>}
                 </CardContent>
                 <div className="card-actions">
-                  <Button variant="ghost" onClick={() => setHistoryModal({ tenantId: selectedHistoryTenant, monthIdx: idx, current: m })}>Modifier</Button>
+                  <Button variant="ghost" onClick={() => setHistoryModal({ tenantId: selectedHistoryTenant, monthKey: m.monthKey || m.month, current: m })}>Modifier</Button>
                 </div>
               </Card>
             ))}
@@ -937,9 +1491,20 @@ const Proprietaires = () => {
     );
   }
 
+  if (loading) {
+    return (
+      <div className="admin-wrapper">
+        <Navbar isAuthenticated onLogout={() => auth.signOut()} />
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
   return (
     <div className="admin-wrapper">
       <Navbar isAuthenticated onLogout={() => auth.signOut()} />
+
+      <ErrorAlert message={error} onClose={() => setError(null)} />
 
       <header className="admin-hero">
         <div>
@@ -973,66 +1538,15 @@ const Proprietaires = () => {
         {tab === 'history' && renderHistory()}
       </section>
 
-      <Dialog
-        open={propertyModal}
-        onClose={() => setPropertyModal(false)}
-        title="Ajouter une propriété"
-        footer={
-          <div className="dialog-actions">
-            <Button variant="ghost" onClick={() => setPropertyModal(false)}>Annuler</Button>
-            <Button onClick={addProperty}>Enregistrer</Button>
-          </div>
-        }
-      >
-        <Label>Adresse</Label>
-        <Input value={propertyForm.address} onChange={(e) => setPropertyForm({ ...propertyForm, address: e.target.value })} placeholder="Adresse complète" />
-        <div className="form-row">
-          <div>
-            <Label>Type</Label>
-            <Select value={propertyForm.type} onChange={(e) => setPropertyForm({ ...propertyForm, type: e.target.value })}>
-              <option>Appartement</option>
-              <option>Maison</option>
-              <option>Studio</option>
-            </Select>
-          </div>
-          <div>
-            <Label>Surface (m²)</Label>
-            <Input type="number" value={propertyForm.surface} onChange={(e) => setPropertyForm({ ...propertyForm, surface: Number(e.target.value) })} />
-          </div>
-        </div>
-        <div className="form-row">
-          <div>
-            <Label>Chambres</Label>
-            <Input type="number" value={propertyForm.bedrooms} onChange={(e) => setPropertyForm({ ...propertyForm, bedrooms: Number(e.target.value) })} />
-          </div>
-          <div>
-            <Label>Salles de bain</Label>
-            <Input type="number" value={propertyForm.bathrooms} onChange={(e) => setPropertyForm({ ...propertyForm, bathrooms: Number(e.target.value) })} />
-          </div>
-        </div>
-        <div className="form-row">
-          <div>
-            <Label>Loyer (€)</Label>
-            <Input type="number" value={propertyForm.rent} onChange={(e) => setPropertyForm({ ...propertyForm, rent: Number(e.target.value) })} />
-          </div>
-          <div>
-            <Label>Statut</Label>
-            <Select value={propertyForm.status} onChange={(e) => setPropertyForm({ ...propertyForm, status: e.target.value })}>
-              <option value="disponible">Disponible</option>
-              <option value="occupé">Occupé</option>
-            </Select>
-          </div>
-        </div>
-      </Dialog>
-
+      {/* Dialog pour Locataires */}
       <Dialog
         open={tenantModal}
-        onClose={() => setTenantModal(false)}
-        title="Ajouter un locataire"
+        onClose={() => { setTenantModal(false); setEditingTenantId(null); }}
+        title={editingTenantId ? 'Modifier un locataire' : 'Ajouter un locataire'}
         footer={
           <div className="dialog-actions">
-            <Button variant="ghost" onClick={() => setTenantModal(false)}>Annuler</Button>
-            <Button onClick={addTenant}>Enregistrer</Button>
+            <Button variant="ghost" onClick={() => { setTenantModal(false); setEditingTenantId(null); }} disabled={actionLoading}>Annuler</Button>
+            <Button onClick={addOrUpdateTenant} disabled={actionLoading}>{actionLoading ? 'Enregistrement...' : 'Enregistrer'}</Button>
           </div>
         }
       >
@@ -1046,7 +1560,7 @@ const Proprietaires = () => {
           <div>
             <Label>Propriété</Label>
             <Select value={tenantForm.propertyId} onChange={(e) => setTenantForm({ ...tenantForm, propertyId: e.target.value })}>
-              {properties.map((p) => <option key={p.id} value={p.id}>{p.address}</option>)}
+              {properties.map((p) => <option key={p.id} value={p.id}>{getPropertyLabel(p)}</option>)}
             </Select>
           </div>
           <div>
@@ -1066,14 +1580,15 @@ const Proprietaires = () => {
         </div>
       </Dialog>
 
+      {/* Dialog pour Paiements */}
       <Dialog
         open={paymentModal}
         onClose={() => setPaymentModal(false)}
         title="Nouveau paiement"
         footer={
           <div className="dialog-actions">
-            <Button variant="ghost" onClick={() => setPaymentModal(false)}>Annuler</Button>
-            <Button onClick={addPayment}>Enregistrer</Button>
+            <Button variant="ghost" onClick={() => setPaymentModal(false)} disabled={actionLoading}>Annuler</Button>
+            <Button onClick={addPayment} disabled={actionLoading}>{actionLoading ? 'Enregistrement...' : 'Enregistrer'}</Button>
           </div>
         }
       >
@@ -1083,7 +1598,7 @@ const Proprietaires = () => {
         </Select>
         <Label>Propriété</Label>
         <Select value={paymentForm.propertyId} onChange={(e) => setPaymentForm({ ...paymentForm, propertyId: e.target.value })}>
-          {properties.map((p) => <option key={p.id} value={p.id}>{p.address}</option>)}
+          {properties.map((p) => <option key={p.id} value={p.id}>{getPropertyLabel(p)}</option>)}
         </Select>
         <div className="form-row">
           <div>
@@ -1112,20 +1627,21 @@ const Proprietaires = () => {
         </div>
       </Dialog>
 
+      {/* Dialog pour Maintenance */}
       <Dialog
         open={maintenanceModal}
-        onClose={() => setMaintenanceModal(false)}
-        title="Nouvelle demande de maintenance"
+        onClose={() => { setMaintenanceModal(false); setEditingMaintenanceId(null); }}
+        title={editingMaintenanceId ? 'Modifier la demande' : 'Nouvelle demande de maintenance'}
         footer={
           <div className="dialog-actions">
-            <Button variant="ghost" onClick={() => setMaintenanceModal(false)}>Annuler</Button>
-            <Button onClick={addMaintenance}>Enregistrer</Button>
+            <Button variant="ghost" onClick={() => { setMaintenanceModal(false); setEditingMaintenanceId(null); }} disabled={actionLoading}>Annuler</Button>
+            <Button onClick={addOrUpdateMaintenance} disabled={actionLoading}>{actionLoading ? 'Enregistrement...' : 'Enregistrer'}</Button>
           </div>
         }
       >
         <Label>Propriété</Label>
         <Select value={maintenanceForm.propertyId} onChange={(e) => setMaintenanceForm({ ...maintenanceForm, propertyId: e.target.value })}>
-          {properties.map((p) => <option key={p.id} value={p.id}>{p.address}</option>)}
+          {properties.map((p) => <option key={p.id} value={p.id}>{getPropertyLabel(p)}</option>)}
         </Select>
         <Label>Locataire</Label>
         <Select value={maintenanceForm.tenantId} onChange={(e) => setMaintenanceForm({ ...maintenanceForm, tenantId: e.target.value })}>
@@ -1155,20 +1671,21 @@ const Proprietaires = () => {
         </div>
       </Dialog>
 
+      {/* Dialog pour Inspections */}
       <Dialog
         open={inspectionModal}
-        onClose={() => setInspectionModal(false)}
-        title="Nouvel état des lieux"
+        onClose={() => { setInspectionModal(false); setEditingInspectionId(null); }}
+        title={editingInspectionId ? 'Modifier état des lieux' : 'Nouvel état des lieux'}
         footer={
           <div className="dialog-actions">
-            <Button variant="ghost" onClick={() => setInspectionModal(false)}>Annuler</Button>
-            <Button onClick={addInspection}>Enregistrer</Button>
+            <Button variant="ghost" onClick={() => { setInspectionModal(false); setEditingInspectionId(null); }} disabled={actionLoading}>Annuler</Button>
+            <Button onClick={addOrUpdateInspection} disabled={actionLoading}>{actionLoading ? 'Enregistrement...' : 'Enregistrer'}</Button>
           </div>
         }
       >
         <Label>Propriété</Label>
         <Select value={inspectionForm.propertyId} onChange={(e) => setInspectionForm({ ...inspectionForm, propertyId: e.target.value })}>
-          {properties.map((p) => <option key={p.id} value={p.id}>{p.address}</option>)}
+          {properties.map((p) => <option key={p.id} value={p.id}>{getPropertyLabel(p)}</option>)}
         </Select>
         <Label>Locataire</Label>
         <Select value={inspectionForm.tenantId} onChange={(e) => setInspectionForm({ ...inspectionForm, tenantId: e.target.value })}>
@@ -1195,6 +1712,40 @@ const Proprietaires = () => {
         <p className="muted small">Les sections détaillées (pièces, équipements, signatures) sont simulées pour cette maquette.</p>
       </Dialog>
 
+      {/* Dialog pour affecter un bien à un locataire */}
+      <Dialog
+        open={!!propertySelectModal}
+        onClose={() => setPropertySelectModal(null)}
+        title="Affecter un bien"
+        footer={
+          <div className="dialog-actions">
+            <Button variant="ghost" onClick={() => setPropertySelectModal(null)}>Annuler</Button>
+            <Button onClick={assignPropertyToTenant} disabled={!propertySelectModal?.propertyId}>Enregistrer</Button>
+          </div>
+        }
+      >
+        {propertySelectModal && (
+          <>
+            <Label>Locataire</Label>
+            <div className="muted" style={{ marginBottom: 8 }}>
+              {getTenant(propertySelectModal.tenantId)?.name || propertySelectModal.tenantId}
+            </div>
+            <Label>Bien</Label>
+            <Select
+              value={propertySelectModal.propertyId}
+              onChange={(e) => setPropertySelectModal((prev) => ({ ...prev, propertyId: e.target.value }))}
+            >
+              {properties.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {getPropertyLabel(p)}{p.surface ? ` · ${p.surface} m²` : ''} · ID {p.id}
+                </option>
+              ))}
+            </Select>
+          </>
+        )}
+      </Dialog>
+
+      {/* Dialog pour Historique */}
       <Dialog
         open={!!historyModal}
         onClose={() => setHistoryModal(null)}
@@ -1208,10 +1759,10 @@ const Proprietaires = () => {
         {historyModal && (
           <>
             <div className="status-buttons">
-              <Button onClick={() => updateHistoryStatus(historyModal.tenantId, historyModal.monthIdx, 'payé')}>Marquer comme payé</Button>
-              <Button variant="ghost" onClick={() => updateHistoryStatus(historyModal.tenantId, historyModal.monthIdx, 'attente')}>Marquer en attente</Button>
-              <Button variant="ghost" onClick={() => updateHistoryStatus(historyModal.tenantId, historyModal.monthIdx, 'retard')}>Marquer en retard</Button>
-              <Button variant="ghost" onClick={() => updateHistoryStatus(historyModal.tenantId, historyModal.monthIdx, 'partiel', Number(partialAmount || 0))}>Marquer partiel</Button>
+              <Button onClick={() => updateHistoryStatus(historyModal.tenantId, historyModal.monthKey, 'payé')}>Marquer comme payé</Button>
+              <Button variant="ghost" onClick={() => updateHistoryStatus(historyModal.tenantId, historyModal.monthKey, 'attente')}>Marquer en attente</Button>
+              <Button variant="ghost" onClick={() => updateHistoryStatus(historyModal.tenantId, historyModal.monthKey, 'retard')}>Marquer en retard</Button>
+              <Button variant="ghost" onClick={() => updateHistoryStatus(historyModal.tenantId, historyModal.monthKey, 'partiel', Number(partialAmount || 0))}>Marquer partiel</Button>
             </div>
             <div className="form-row">
               <div>
