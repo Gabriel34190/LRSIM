@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import '../css/Proprietaires.css';
 import PhotoSandra from '../images/pion_gaby.jpg';
 import Navbar from './Navbar';
@@ -18,7 +18,14 @@ import {
   Users,
   Wand2,
   X,
-  AlertTriangle
+  AlertTriangle,
+  User,
+  CheckCircle,
+  Clock,
+  XCircle,
+  DollarSign,
+  Calendar,
+  Edit
 } from 'lucide-react';
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
@@ -201,7 +208,7 @@ function explainAvailability(availabilityString, date = new Date()) {
 }
 
 
-const Card = ({ className = '', children }) => <div className={`ui-card ${className}`}>{children}</div>;
+const Card = ({ className = '', children, onClick, ...props }) => <div className={`ui-card ${className}`} onClick={onClick} {...props}>{children}</div>;
 const CardHeader = ({ className = '', children }) => <div className={`ui-card-header ${className}`}>{children}</div>;
 const CardTitle = ({ className = '', children }) => <div className={`ui-card-title ${className}`}>{children}</div>;
 const CardDescription = ({ className = '', children }) => <div className={`ui-card-description ${className}`}>{children}</div>;
@@ -507,7 +514,7 @@ const Proprietaires = () => {
     history
   });
 
-  const loadAllData = async () => {
+  const loadAllData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -539,7 +546,7 @@ const Proprietaires = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentUserId]);
 
   const persistData = async (nextData) => {
     const merged = mergeData(nextData);
@@ -557,7 +564,7 @@ const Proprietaires = () => {
     if (isAuthenticated && currentUserId) {
       loadAllData();
     }
-  }, [isAuthenticated, currentUserId]);
+  }, [isAuthenticated, currentUserId, loadAllData]);
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60 * 1000);
@@ -588,6 +595,7 @@ const Proprietaires = () => {
     if (properties.length && !inspectionForm.propertyId) {
       setInspectionForm((prev) => ({ ...prev, propertyId: properties[0].id }));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [properties, tenants]);
 
   const handleOwnerClick = (owner) => {
@@ -1004,12 +1012,8 @@ const Proprietaires = () => {
     const handleChipClick = (label) => {
       if (label === 'Par locataire') {
         setPaymentView('parLocataire');
-        // sélectionner par défaut le premier locataire si disponible
-        if (tenants.length > 0) {
-          setSelectedPaymentTenantId((prev) => prev || tenants[0].id);
-        } else {
-          setSelectedPaymentTenantId(null);
-        }
+        // Ne pas sélectionner automatiquement, laisser l'utilisateur choisir
+        // Si un locataire était déjà sélectionné, on le garde
         setPaymentFilter('Tous');
       } else {
         setPaymentView('liste');
@@ -1046,9 +1050,16 @@ const Proprietaires = () => {
       </div>
     );
 
+    const getProgressBarColor = (rate) => {
+      if (rate >= 90) return '#22c55e'; // green-500
+      if (rate >= 70) return '#f59e0b'; // orange-500
+      return '#ef4444'; // red-500
+    };
+
     const renderParLocataireList = () => (
       <div className="payment-tenant-list margin-top">
-        <p className="muted">Sélectionnez un locataire</p>
+        <h2 className="margin-bottom" style={{ fontSize: '1.5rem', fontWeight: 600 }}>Historique des paiements</h2>
+        <p className="muted" style={{ marginBottom: '1.5rem' }}>Sélectionnez un locataire</p>
         <div className="grid grid-3 margin-top">
           {tenants.map((t) => {
             const prop = getProperty(t.propertyId);
@@ -1056,25 +1067,46 @@ const Proprietaires = () => {
             const hist = history[t.id] || [];
             const paid = hist.filter((m) => m.status === 'payé').length;
             const rate = months.length ? Math.round((paid / months.length) * 100) : 0;
+            const barColor = getProgressBarColor(rate);
             return (
               <Card
                 key={t.id}
                 className="clickable"
-                onClick={() => {
-                  setTab('history');
-                  setSelectedHistoryTenant(t.id);
+                style={{ cursor: 'pointer', padding: '1rem' }}
+                onClick={(e) => {
+                  setPaymentView('parLocataire');
+                  setSelectedPaymentTenantId(t.id);
                 }}
               >
-                <CardHeader className="card-row">
-                  <div>
-                    <CardTitle>{t.name}</CardTitle>
-                    <CardDescription>{getPropertyLabel(prop)}</CardDescription>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+                  <User size={20} style={{ color: '#6b7280' }} />
+                  <CardTitle style={{ fontSize: '1rem', fontWeight: 600 }}>{t.name}</CardTitle>
+                </div>
+                <div style={{ marginBottom: '0.75rem' }}>
+                  <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>Propriété</div>
+                  <div style={{ fontSize: '0.875rem', color: '#1f2937' }}>{prop?.address || getPropertyLabel(prop)}</div>
+                </div>
+                <div style={{ marginBottom: '0.75rem' }}>
+                  <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>Loyer mensuel</div>
+                  <div style={{ fontSize: '0.875rem', color: '#1f2937' }}>{t.rent.toLocaleString('fr-FR')} €</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>Taux de paiement</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{ flex: 1, height: '8px', backgroundColor: '#e5e7eb', borderRadius: '9999px', overflow: 'hidden' }}>
+                      <div
+                        style={{
+                          height: '100%',
+                          width: `${rate}%`,
+                          backgroundColor: barColor,
+                          borderRadius: '9999px',
+                          transition: 'width 0.3s ease'
+                        }}
+                      />
+                    </div>
+                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1f2937', minWidth: '3rem' }}>{rate}%</span>
                   </div>
-                  <Badge variant="soft">{t.rent} € / mois</Badge>
-                </CardHeader>
-                <CardContent className="muted">
-                  <div>Taux de paiement : {rate}%</div>
-                </CardContent>
+                </div>
               </Card>
             );
           })}
@@ -1082,9 +1114,42 @@ const Proprietaires = () => {
       </div>
     );
 
+    const getStatusIcon = (status) => {
+      switch (status) {
+        case 'payé':
+          return <CheckCircle className="w-5 h-5" style={{ color: '#166534' }} />;
+        case 'partiel':
+          return <DollarSign className="w-5 h-5" style={{ color: '#c2410c' }} />;
+        case 'attente':
+          return <Clock className="w-5 h-5" style={{ color: '#92400e' }} />;
+        case 'retard':
+          return <XCircle className="w-5 h-5" style={{ color: '#991b1b' }} />;
+        default:
+          return <Calendar className="w-5 h-5" style={{ color: '#6b7280' }} />;
+      }
+    };
+
+    const getStatusLabel = (status) => {
+      switch (status) {
+        case 'payé': return 'Payé';
+        case 'partiel': return 'Partiel';
+        case 'attente': return 'En attente';
+        case 'retard': return 'En retard';
+        default: return 'À venir';
+      }
+    };
+
+    const formatDateFR = (dateStr) => {
+      if (!dateStr) return '-';
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    };
+
     const renderParLocataireDetail = () => {
       const tenant = tenants.find((t) => t.id === selectedPaymentTenantId);
-      if (!tenant) return null;
+      if (!tenant) {
+        return null;
+      }
       const prop = getProperty(tenant.propertyId);
       const months = buildLeaseCalendar(tenant);
       const hist = history[tenant.id] || [];
@@ -1092,109 +1157,174 @@ const Proprietaires = () => {
       const waiting = hist.filter((m) => m.status === 'attente').length + Math.max(months.length - hist.length, 0);
       const late = hist.filter((m) => m.status === 'retard').length;
       const rate = months.length ? Math.round((paid / months.length) * 100) : 0;
+      const paidTotal = hist
+        .filter((m) => m.status === 'payé' || m.status === 'partiel')
+        .reduce((sum, m) => {
+          if (m.status === 'payé') return sum + (m.amount || tenant.rent);
+          if (m.status === 'partiel' && m.amountPaid) return sum + m.amountPaid;
+          return sum;
+        }, 0);
+
+      const rateColor = rate >= 90 ? '#22c55e' : rate >= 70 ? '#f59e0b' : '#ef4444';
 
       return (
         <div className="payment-tenant-detail margin-top">
-          <Button variant="ghost" onClick={() => setSelectedPaymentTenantId(null)}>
-            <ArrowLeft size={16} /> Retour à la liste
+          <Button variant="ghost" onClick={() => setSelectedPaymentTenantId(null)} style={{ marginBottom: '1.5rem' }}>
+            <ArrowLeft size={16} /> Retour à la liste des locataires
           </Button>
 
-          <h3 style={{ marginTop: 16 }}>{tenant.name}</h3>
+          <h3 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1.5rem' }}>{tenant.name}</h3>
 
-          <div className="grid grid-4 margin-top">
-            <Card>
-              <CardTitle>Propriété</CardTitle>
-              <CardContent className="muted">
-                <div>{getPropertyLabel(prop)}</div>
-                <div style={{ marginTop: 4 }}>{prop?.address}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardTitle>Loyer mensuel</CardTitle>
-              <CardContent className="metric">
-                <div className="metric-value small">{tenant.rent} €</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardTitle>Début du bail</CardTitle>
-              <CardContent className="metric">
-                <div className="metric-value small">{tenant.leaseStart || '-'}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardTitle>Fin du bail</CardTitle>
-              <CardContent className="metric">
-                <div className="metric-value small">{tenant.leaseEnd || '-'}</div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="grid grid-4 margin-top">
-            <Card>
-              <CardTitle>Taux de paiement</CardTitle>
-              <CardContent className="metric">
-                <div className="metric-value small">{rate}%</div>
-                <div className="metric-sub">{paid}/{months.length} mois payés</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardTitle>Payés</CardTitle>
-              <CardContent className="metric">
-                <div className="metric-value small">{paid}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardTitle>En attente</CardTitle>
-              <CardContent className="metric">
-                <div className="metric-value small">{waiting}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardTitle>En retard</CardTitle>
-              <CardContent className="metric">
-                <div className="metric-value small">{late}</div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <h4 className="margin-top">Calendrier des paiements</h4>
-          <div className="payment-calendar-grid margin-top">
-            {months.map((m) => {
-              const entry = hist.find((e) => (e.monthKey || e.month) === m.monthKey) || { status: 'attente', amount: m.amount };
-              const palette = statusPalette[entry.status] || statusPalette.attente;
-              return (
-                <div
-                  key={`${tenant.id}-${m.monthKey}`}
-                  className="payment-month-card"
-                  style={{ borderColor: palette.color, backgroundColor: palette.bg }}
-                >
-                  <div className="payment-month-header">
-                    <span>{m.label}</span>
-                    <StatusBadge status={entry.status} />
-                  </div>
-                  <div className="muted small">{m.amount} €</div>
-                  {entry.status === 'partiel' && entry.amountPaid != null && (
-                    <div className="muted small">Payé : {entry.amountPaid} €</div>
-                  )}
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      setPartialAmount(entry.amountPaid ? String(entry.amountPaid) : '');
-                      setHistoryModal({ tenantId: tenant.id, monthKey: m.monthKey, current: entry });
-                    }}
-                    style={{ marginTop: 8 }}
-                  >
-                    Modifier
-                  </Button>
+          {/* Informations du bail */}
+          <Card style={{ marginBottom: '1.5rem', padding: '1.5rem' }}>
+            <CardTitle style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>Informations du bail</CardTitle>
+            <div className="grid grid-4" style={{ gap: '1rem' }}>
+              <div>
+                <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>Propriété</div>
+                <div style={{ fontSize: '0.875rem', color: '#1f2937', fontWeight: 500 }}>
+                  {prop?.address || getPropertyLabel(prop)}
                 </div>
-              );
-            })}
+              </div>
+              <div>
+                <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>Loyer mensuel</div>
+                <div style={{ fontSize: '0.875rem', color: '#1f2937', fontWeight: 500 }}>
+                  {tenant.rent.toLocaleString('fr-FR')} €
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>Début du bail</div>
+                <div style={{ fontSize: '0.875rem', color: '#1f2937', fontWeight: 500 }}>
+                  {formatDateFR(tenant.leaseStart)}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>Fin du bail</div>
+                <div style={{ fontSize: '0.875rem', color: '#1f2937', fontWeight: 500 }}>
+                  {formatDateFR(tenant.leaseEnd)}
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Statistiques */}
+          <div className="grid grid-4 margin-top" style={{ marginBottom: '1.5rem', gap: '1rem' }}>
+            <Card style={{ padding: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                <CardTitle style={{ fontSize: '0.875rem', fontWeight: 500 }}>Taux de paiement</CardTitle>
+                <TrendingUp size={16} style={{ color: '#6b7280' }} />
+              </div>
+              <div style={{ fontSize: '2rem', fontWeight: 700, color: rateColor, marginBottom: '0.25rem' }}>{rate}%</div>
+              <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>{paid}/{months.length} mois</div>
+            </Card>
+            <Card style={{ padding: '1rem' }}>
+              <CardTitle style={{ fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.75rem' }}>Payés</CardTitle>
+              <div style={{ fontSize: '2rem', fontWeight: 700, color: '#22c55e', marginBottom: '0.25rem' }}>{paid}</div>
+              <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>{paidTotal.toLocaleString('fr-FR')} €</div>
+            </Card>
+            <Card style={{ padding: '1rem' }}>
+              <CardTitle style={{ fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.75rem' }}>En attente</CardTitle>
+              <div style={{ fontSize: '2rem', fontWeight: 700, color: '#f59e0b', marginBottom: '0.25rem' }}>{waiting}</div>
+              <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>mois</div>
+            </Card>
+            <Card style={{ padding: '1rem' }}>
+              <CardTitle style={{ fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.75rem' }}>En retard</CardTitle>
+              <div style={{ fontSize: '2rem', fontWeight: 700, color: '#ef4444', marginBottom: '0.25rem' }}>{late}</div>
+              <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>mois</div>
+            </Card>
           </div>
 
-          <div className="muted small" style={{ marginTop: 16 }}>
-            Légende :{' '}
-            <span>Payé</span> · <span>Paiement partiel</span> · <span>En attente</span> · <span>En retard</span>
-          </div>
+          {/* Calendrier des paiements */}
+          <Card style={{ padding: '1.5rem' }}>
+            <CardTitle style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>Calendrier des paiements</CardTitle>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.75rem', marginBottom: '1rem' }}>
+              {months.map((m) => {
+                const entry = hist.find((e) => (e.monthKey || e.month) === m.monthKey) || { status: 'attente', amount: m.amount };
+                const palette = statusPalette[entry.status] || statusPalette.attente;
+                const statusLabel = getStatusLabel(entry.status);
+                return (
+                  <div
+                    key={`${tenant.id}-${m.monthKey}`}
+                    style={{
+                      border: `2px solid ${palette.color}`,
+                      backgroundColor: palette.bg,
+                      borderRadius: '0.75rem',
+                      padding: '1rem',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      minHeight: '140px'
+                    }}
+                  >
+                    <div style={{ marginBottom: '0.5rem' }}>
+                      {getStatusIcon(entry.status)}
+                    </div>
+                    <div style={{ fontSize: '0.875rem', fontWeight: 500, color: palette.color, textAlign: 'center' }}>
+                      {m.label}
+                    </div>
+                    <div style={{ fontSize: '0.875rem', fontWeight: 500, color: palette.color }}>
+                      {m.amount.toLocaleString('fr-FR')} €
+                    </div>
+                    {entry.status === 'partiel' && entry.amountPaid != null && (
+                      <div style={{ fontSize: '0.75rem', color: '#c2410c' }}>
+                        Payé : {entry.amountPaid.toLocaleString('fr-FR')} €
+                      </div>
+                    )}
+                    <div
+                      style={{
+                        backgroundColor: palette.bg,
+                        border: `1px solid ${palette.color}`,
+                        borderRadius: '0.375rem',
+                        padding: '0.25rem 0.5rem',
+                        fontSize: '0.75rem',
+                        color: palette.color,
+                        fontWeight: 500,
+                        marginTop: '0.25rem'
+                      }}
+                    >
+                      {statusLabel}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setPartialAmount(entry.amountPaid ? String(entry.amountPaid) : '');
+                        setHistoryModal({ tenantId: tenant.id, monthKey: m.monthKey, current: entry });
+                      }}
+                      style={{ marginTop: 'auto', fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
+                    >
+                      <Edit size={12} style={{ marginRight: '0.25rem' }} />
+                      Modifier
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Légende */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.75rem', fontSize: '0.75rem', color: '#6b7280', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e5e7eb' }}>
+              <span>Légende :</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <span style={{ width: '12px', height: '12px', borderRadius: '2px', backgroundColor: '#22c55e' }}></span>
+                Payé
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <span style={{ width: '12px', height: '12px', borderRadius: '2px', backgroundColor: '#f59e0b' }}></span>
+                Paiement partiel
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <span style={{ width: '12px', height: '12px', borderRadius: '2px', backgroundColor: '#fef3c7' }}></span>
+                En attente
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <span style={{ width: '12px', height: '12px', borderRadius: '2px', backgroundColor: '#ef4444' }}></span>
+                En retard
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <span style={{ width: '12px', height: '12px', borderRadius: '2px', backgroundColor: '#9ca3af' }}></span>
+                À venir
+              </span>
+            </div>
+          </Card>
         </div>
       );
     };
