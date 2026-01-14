@@ -9,7 +9,7 @@ import {
   where,
   Timestamp
 } from 'firebase/firestore';
-import { db, auth } from '../components/firebase-config';
+import { db } from '../components/firebase-config';
 
 // ===== PROPERTIES =====
 export const getProperties = async (ownerId) => {

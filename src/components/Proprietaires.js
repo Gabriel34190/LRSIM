@@ -5,6 +5,10 @@ import Navbar from './Navbar';
 import { auth } from './firebase-config';
 import * as ownerDataService from '../services/ownerDataService';
 import * as firebaseService from '../services/firebaseService';
+import { buildInspectionPdf } from '../services/inspectionPdf';
+import { sendInspectionForSignature } from '../services/docusignService';
+import * as paymentsStorage from '../services/paymentsLocalStorage';
+import InspectionForm from './InspectionForm';
 import {
   AlertCircle,
   ArrowLeft,
@@ -374,6 +378,34 @@ const buildLeaseCalendar = (tenant) => {
   return months;
 };
 
+// Convertit une entrée d'historique ("Jan 2025", "Fév 2025") en clé YYYY-MM
+const monthKeyFromLabel = (label) => {
+  if (!label) return null;
+  const parts = label.split(/\s+/);
+  if (parts.length < 2) return null;
+  const monthToken = normalize(parts[0]).slice(0, 3);
+  const year = parseInt(parts[parts.length - 1], 10);
+  if (Number.isNaN(year)) return null;
+  const map = {
+    jan: 0, fev: 1, fév: 1, mar: 2, avr: 3, mai: 4, jun: 5, jui: 6, jul: 6, août: 7, aou: 7, sep: 8, oct: 9, nov: 10, dec: 11, déc: 11
+  };
+  const month = map[monthToken];
+  if (month == null) return null;
+  return `${year}-${String(month + 1).padStart(2, '0')}`;
+};
+
+const getPaymentMonthKey = (payment) => {
+  if (payment?.dueDate) {
+    const d = new Date(payment.dueDate);
+    if (!Number.isNaN(d.getTime())) return getMonthKey(d);
+  }
+  if (payment?.period) {
+    const mk = monthKeyFromLabel(payment.period);
+    if (mk) return mk;
+  }
+  return null;
+};
+
 const TabButton = ({ id, icon: Icon, label, active, onClick }) => (
   <button className={`tab-trigger ${active ? 'active' : ''}`} onClick={() => onClick(id)}>
     <Icon size={16} />
@@ -446,6 +478,8 @@ const Proprietaires = () => {
   const [paymentModal, setPaymentModal] = useState(false);
   const [maintenanceModal, setMaintenanceModal] = useState(false);
   const [inspectionModal, setInspectionModal] = useState(false);
+  const [inspectionFormModal, setInspectionFormModal] = useState(false);
+  const [selectedInspection, setSelectedInspection] = useState(null);
   const [historyModal, setHistoryModal] = useState(null);
   const [editingTenantId, setEditingTenantId] = useState(null);
   const [editingMaintenanceId, setEditingMaintenanceId] = useState(null);
@@ -530,12 +564,16 @@ const Proprietaires = () => {
 
       // 2) Charger le reste des données chiffrées locales
       const stored = await ownerDataService.loadOwnerData(currentUserId, initialData, STORAGE_SECRET);
+      const localPayments = paymentsStorage.loadPayments();
 
       // 3) Fusion : propriétés issues de Firebase si présentes, sinon fallback stocké ou initial
       const merged = {
         ...stored,
-        properties: (remoteProperties && remoteProperties.length) ? remoteProperties : (stored.properties || initialData.properties)
+        properties: (remoteProperties && remoteProperties.length) ? remoteProperties : (stored.properties || initialData.properties),
+        payments: (localPayments && localPayments.length) ? localPayments : (stored.payments || initialData.payments)
       };
+      // On ré-écrit les paiements en clair pour conserver l'historique local simple
+      paymentsStorage.savePayments(merged.payments);
       applyDataToState(merged);
       // Sauvegarder avec la source de vérité pour garder cohérent le local
       await ownerDataService.saveOwnerData(currentUserId, merged, STORAGE_SECRET);
@@ -555,6 +593,11 @@ const Proprietaires = () => {
     } catch (err) {
       console.error('Erreur lors de la sauvegarde locale:', err);
       setError("Sauvegarde locale impossible. Vérifiez l'espace de stockage ou les droits.");
+    }
+    try {
+      paymentsStorage.savePayments(merged.payments);
+    } catch (err) {
+      console.error('Erreur lors de la sauvegarde des paiements en clair:', err);
     }
     applyDataToState(merged);
   };
@@ -606,6 +649,59 @@ const Proprietaires = () => {
   const handleClosePanel = () => {
     setSelectedOwner(null);
     setIsPanelOpen(false);
+  };
+
+  const exportInspectionPdf = async (inspection) => {
+    try {
+      setActionLoading(true);
+      const payload = {
+        inspection,
+        property: getProperty(inspection.propertyId),
+        tenant: getTenant(inspection.tenantId),
+        sections: inspection.sections || {}
+      };
+      const pdfBytes = await buildInspectionPdf(payload);
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `EDL-${inspection.id || 'document'}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Erreur export PDF inspection', err);
+      setError("Export PDF impossible. Vérifiez la console pour plus de détails.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const requestInspectionSignature = async (inspection) => {
+    const signerEmail = window.prompt('Email du signataire (locataire) :');
+    if (!signerEmail) return;
+    const signerName = window.prompt('Nom du signataire (locataire) :') || 'Signataire';
+    try {
+      setActionLoading(true);
+      const payload = {
+        inspection,
+        property: getProperty(inspection.propertyId),
+        tenant: getTenant(inspection.tenantId),
+        sections: inspection.sections || {}
+      };
+      const pdfBytes = await buildInspectionPdf(payload);
+      await sendInspectionForSignature({
+        pdfBytes,
+        signerEmail,
+        signerName,
+        subject: `Etat des lieux ${inspection.type || ''} - ${payload.property?.address || ''}`
+      });
+      alert('Demande de signature envoyée via DocuSign (proxy).');
+    } catch (err) {
+      console.error('Erreur DocuSign', err);
+      setError(err.message || "Impossible d'envoyer la demande de signature.");
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const propertyCount = properties.length;
@@ -773,15 +869,43 @@ const Proprietaires = () => {
     await persistData(nextData);
   };
 
-  const openInspectionModal = (item) => {
-    if (item) {
-      setInspectionForm(item);
-      setEditingInspectionId(item.id);
-    } else {
-      setInspectionForm({ propertyId: properties[0]?.id || '', tenantId: '', type: 'Entrée', date: '', status: 'En attente' });
-      setEditingInspectionId(null);
+  const openInspectionFormModal = (item) => {
+    setSelectedInspection(item);
+    setInspectionFormModal(true);
+  };
+
+  const handleInspectionFormSave = async (sectionsData) => {
+    setActionLoading(true);
+    try {
+      const snapshot = getSnapshot();
+      const inspection = selectedInspection || {
+        id: createId('inspection'),
+        propertyId: properties[0]?.id || '',
+        tenantId: tenants[0]?.id || '',
+        type: 'Entrée',
+        date: new Date().toISOString().split('T')[0],
+        status: 'En attente'
+      };
+
+      const updatedInspection = {
+        ...inspection,
+        sections: sectionsData
+      };
+
+      const nextInspections = selectedInspection
+        ? snapshot.inspections.map((i) => (i.id === inspection.id ? updatedInspection : i))
+        : [...snapshot.inspections, updatedInspection];
+
+      const nextData = { ...snapshot, inspections: nextInspections };
+      await persistData(nextData);
+      setInspectionFormModal(false);
+      setSelectedInspection(null);
+      setError(null);
+    } catch (err) {
+      setError(`Erreur lors de l'enregistrement: ${err.message}`);
+    } finally {
+      setActionLoading(false);
     }
-    setInspectionModal(true);
   };
 
   const addOrUpdateInspection = async () => {
@@ -823,14 +947,17 @@ const Proprietaires = () => {
     const base = idx >= 0 ? items[idx] : { month: monthKey, monthKey, amount: tenants.find((t) => t.id === tenantId)?.rent || 0 };
     const nextEntry = {
       ...base,
-      status,
-      ...(status === 'partiel' && amount ? { amountPaid: amount } : { amountPaid: undefined })
-    };
+          status,
+      // pour un paiement partiel, on conserve toujours le montant saisi
+      ...(status === 'partiel'
+        ? { amountPaid: amount }
+        : { amountPaid: undefined })
+        };
     if (idx >= 0) {
       items[idx] = nextEntry;
     } else {
       items.push(nextEntry);
-    }
+      }
     const nextData = { ...snapshot, history: { ...snapshot.history, [tenantId]: items } };
     persistData(nextData);
     setHistoryModal(null);
@@ -1153,17 +1280,50 @@ const Proprietaires = () => {
       const prop = getProperty(tenant.propertyId);
       const months = buildLeaseCalendar(tenant);
       const hist = history[tenant.id] || [];
-      const paid = hist.filter((m) => m.status === 'payé').length;
-      const waiting = hist.filter((m) => m.status === 'attente').length + Math.max(months.length - hist.length, 0);
-      const late = hist.filter((m) => m.status === 'retard').length;
-      const rate = months.length ? Math.round((paid / months.length) * 100) : 0;
-      const paidTotal = hist
-        .filter((m) => m.status === 'payé' || m.status === 'partiel')
-        .reduce((sum, m) => {
-          if (m.status === 'payé') return sum + (m.amount || tenant.rent);
-          if (m.status === 'partiel' && m.amountPaid) return sum + m.amountPaid;
-          return sum;
-        }, 0);
+
+      const histByMonth = new Map(
+        hist
+          .map((m) => {
+            const key = m.monthKey || monthKeyFromLabel(m.month);
+            return [key, m];
+          })
+          .filter(([key]) => !!key)
+      );
+
+      const paymentsByMonth = new Map(
+        payments
+          .filter((p) => p.tenantId === tenant.id)
+          .map((p) => [getPaymentMonthKey(p), p])
+          .filter(([key]) => !!key)
+      );
+
+      const monthsWithStatus = months.map((m) => {
+        const payment = paymentsByMonth.get(m.monthKey);
+        const histEntry = histByMonth.get(m.monthKey);
+        if (payment) {
+          return {
+            monthKey: m.monthKey,
+            label: m.label,
+            amount: payment.amount ?? m.amount,
+            status: payment.status || 'attente',
+            amountPaid: payment.amountPaid
+          };
+        }
+        if (histEntry) {
+          return { ...histEntry, monthKey: m.monthKey, label: m.label, amount: histEntry.amount ?? m.amount };
+        }
+        return { monthKey: m.monthKey, label: m.label, amount: m.amount, status: 'attente' };
+      });
+
+      const paid = monthsWithStatus.filter((m) => m.status === 'payé').length;
+      const waiting = monthsWithStatus.filter((m) => m.status === 'attente').length;
+      const late = monthsWithStatus.filter((m) => m.status === 'retard').length;
+      const rate = monthsWithStatus.length ? Math.round((paid / monthsWithStatus.length) * 100) : 0;
+      const paidTotal = monthsWithStatus.reduce((sum, m) => {
+        if (m.status === 'payé') return sum + (m.amount || tenant.rent);
+        if (m.status === 'partiel' && m.amountPaid != null) return sum + m.amountPaid;
+        return sum;
+      }, 0);
 
       const rateColor = rate >= 90 ? '#22c55e' : rate >= 70 ? '#f59e0b' : '#ef4444';
 
@@ -1237,13 +1397,12 @@ const Proprietaires = () => {
           <Card style={{ padding: '1.5rem' }}>
             <CardTitle style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>Calendrier des paiements</CardTitle>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.75rem', marginBottom: '1rem' }}>
-              {months.map((m) => {
-                const entry = hist.find((e) => (e.monthKey || e.month) === m.monthKey) || { status: 'attente', amount: m.amount };
+              {monthsWithStatus.map((entry) => {
                 const palette = statusPalette[entry.status] || statusPalette.attente;
                 const statusLabel = getStatusLabel(entry.status);
                 return (
                   <div
-                    key={`${tenant.id}-${m.monthKey}`}
+                    key={`${tenant.id}-${entry.monthKey}`}
                     style={{
                       border: `2px solid ${palette.color}`,
                       backgroundColor: palette.bg,
@@ -1260,10 +1419,10 @@ const Proprietaires = () => {
                       {getStatusIcon(entry.status)}
                     </div>
                     <div style={{ fontSize: '0.875rem', fontWeight: 500, color: palette.color, textAlign: 'center' }}>
-                      {m.label}
+                      {entry.label}
                     </div>
                     <div style={{ fontSize: '0.875rem', fontWeight: 500, color: palette.color }}>
-                      {m.amount.toLocaleString('fr-FR')} €
+                      {entry.amount.toLocaleString('fr-FR')} €
                     </div>
                     {entry.status === 'partiel' && entry.amountPaid != null && (
                       <div style={{ fontSize: '0.75rem', color: '#c2410c' }}>
@@ -1288,7 +1447,7 @@ const Proprietaires = () => {
                       variant="ghost"
                       onClick={() => {
                         setPartialAmount(entry.amountPaid ? String(entry.amountPaid) : '');
-                        setHistoryModal({ tenantId: tenant.id, monthKey: m.monthKey, current: entry });
+                        setHistoryModal({ tenantId: tenant.id, monthKey: entry.monthKey, current: entry });
                       }}
                       style={{ marginTop: 'auto', fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
                     >
@@ -1323,6 +1482,10 @@ const Proprietaires = () => {
                 <span style={{ width: '12px', height: '12px', borderRadius: '2px', backgroundColor: '#9ca3af' }}></span>
                 À venir
               </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <span style={{ width: '12px', height: '12px', borderRadius: '2px', backgroundColor: '#f97316' }}></span>
+                Partiel
+              </span>
             </div>
           </Card>
         </div>
@@ -1330,29 +1493,29 @@ const Proprietaires = () => {
     };
 
     return (
-      <div className="module-header">
-        <div className="stats-row">
-          <Card>
-            <CardTitle>Total payé</CardTitle>
-            <div className="metric-value small">{payments.filter((p) => p.status === 'payé').reduce((s, p) => s + p.amount, 0)} €</div>
-          </Card>
-          <Card>
-            <CardTitle>En attente</CardTitle>
-            <div className="metric-value small">{paymentsByStatus.attente}</div>
-          </Card>
-          <Card>
-            <CardTitle>En retard</CardTitle>
-            <div className="metric-value small">{paymentsByStatus.retard}</div>
-          </Card>
-          <Card>
-            <CardTitle>Total</CardTitle>
-            <div className="metric-value small">{payments.length}</div>
-          </Card>
-        </div>
-        <div className="actions-row">
-          <div className="filter-chips">
+    <div className="module-header">
+      <div className="stats-row">
+        <Card>
+          <CardTitle>Total payé</CardTitle>
+          <div className="metric-value small">{payments.filter((p) => p.status === 'payé').reduce((s, p) => s + p.amount, 0)} €</div>
+        </Card>
+        <Card>
+          <CardTitle>En attente</CardTitle>
+          <div className="metric-value small">{paymentsByStatus.attente}</div>
+        </Card>
+        <Card>
+          <CardTitle>En retard</CardTitle>
+          <div className="metric-value small">{paymentsByStatus.retard}</div>
+        </Card>
+        <Card>
+          <CardTitle>Total</CardTitle>
+          <div className="metric-value small">{payments.length}</div>
+        </Card>
+      </div>
+      <div className="actions-row">
+        <div className="filter-chips">
             {['Tous', 'Payés', 'En attente', 'En retard', 'Par locataire'].map((label) => (
-              <Button
+            <Button
                 key={label}
                 variant={
                   (label === 'Par locataire' && paymentView === 'parLocataire') ||
@@ -1368,17 +1531,17 @@ const Proprietaires = () => {
                 onClick={() => handleChipClick(label)}
               >
                 {label}
-              </Button>
-            ))}
-          </div>
-          <Button onClick={() => setPaymentModal(true)}><Plus size={16} /> Nouveau paiement</Button>
+            </Button>
+          ))}
         </div>
+        <Button onClick={() => setPaymentModal(true)}><Plus size={16} /> Nouveau paiement</Button>
+      </div>
 
         {paymentView === 'liste' && renderListe()}
         {paymentView === 'parLocataire' && !selectedPaymentTenantId && renderParLocataireList()}
         {paymentView === 'parLocataire' && selectedPaymentTenantId && renderParLocataireDetail()}
-      </div>
-    );
+    </div>
+  );
   };
 
   const renderMaintenance = () => (
@@ -1419,7 +1582,7 @@ const Proprietaires = () => {
         <h3>États des lieux</h3>
         <p className="muted">Entrées / sorties</p>
       </div>
-      <Button onClick={() => openInspectionModal()}><Plus size={16} /> Ajouter</Button>
+      <Button onClick={() => openInspectionFormModal(null)}><Plus size={16} /> Ajouter</Button>
 
       <div className="grid grid-3 margin-top">
         {inspections.map((i) => (
@@ -1435,8 +1598,10 @@ const Proprietaires = () => {
               <div className="muted">Sections détaillées prêtes (simulation)</div>
             </CardContent>
             <div className="card-actions">
-              <Button variant="ghost" onClick={() => openInspectionModal(i)}>Éditer</Button>
+              <Button variant="ghost" onClick={() => openInspectionFormModal(i)}>Éditer</Button>
               <Button variant="ghost" onClick={() => deleteInspection(i.id)}>Supprimer</Button>
+              <Button variant="ghost" onClick={() => exportInspectionPdf(i)}>Exporter PDF</Button>
+              <Button variant="ghost" onClick={() => requestInspectionSignature(i)}>Signer via DocuSign</Button>
             </div>
           </Card>
         ))}
@@ -1888,12 +2053,44 @@ const Proprietaires = () => {
       >
         {historyModal && (
           <>
-            <div className="status-buttons">
-              <Button onClick={() => updateHistoryStatus(historyModal.tenantId, historyModal.monthKey, 'payé')}>Marquer comme payé</Button>
-              <Button variant="ghost" onClick={() => updateHistoryStatus(historyModal.tenantId, historyModal.monthKey, 'attente')}>Marquer en attente</Button>
-              <Button variant="ghost" onClick={() => updateHistoryStatus(historyModal.tenantId, historyModal.monthKey, 'retard')}>Marquer en retard</Button>
-              <Button variant="ghost" onClick={() => updateHistoryStatus(historyModal.tenantId, historyModal.monthKey, 'partiel', Number(partialAmount || 0))}>Marquer partiel</Button>
-            </div>
+            {(() => {
+              const currentStatus = historyModal.current?.status || 'attente';
+              return (
+                <div className="status-buttons">
+                  <Button
+                    variant={currentStatus === 'payé' ? 'primary' : 'ghost'}
+                    onClick={() => updateHistoryStatus(historyModal.tenantId, historyModal.monthKey, 'payé')}
+                  >
+                    Marquer comme payé
+                  </Button>
+                  <Button
+                    variant={currentStatus === 'attente' ? 'primary' : 'ghost'}
+                    onClick={() => updateHistoryStatus(historyModal.tenantId, historyModal.monthKey, 'attente')}
+                  >
+                    Marquer en attente
+                  </Button>
+                  <Button
+                    variant={currentStatus === 'retard' ? 'primary' : 'ghost'}
+                    onClick={() => updateHistoryStatus(historyModal.tenantId, historyModal.monthKey, 'retard')}
+                  >
+                    Marquer en retard
+                  </Button>
+                  <Button
+                    variant={currentStatus === 'partiel' ? 'primary' : 'ghost'}
+                    onClick={() =>
+                      updateHistoryStatus(
+                        historyModal.tenantId,
+                        historyModal.monthKey,
+                        'partiel',
+                        partialAmount ? Number(partialAmount) : undefined
+                      )
+                    }
+                  >
+                    Marquer partiel
+                  </Button>
+                </div>
+              );
+            })()}
             <div className="form-row">
               <div>
                 <Label>Montant partiel (€)</Label>
@@ -1902,6 +2099,24 @@ const Proprietaires = () => {
               </div>
             </div>
           </>
+        )}
+      </Dialog>
+
+      {/* Dialog pour Formulaire EDL complet */}
+      <Dialog
+        open={inspectionFormModal}
+        onClose={() => { setInspectionFormModal(false); setSelectedInspection(null); }}
+        title={selectedInspection ? 'Modifier état des lieux' : 'Nouvel état des lieux'}
+        footer={null}
+      >
+        {inspectionFormModal && (
+          <InspectionForm
+            inspection={selectedInspection}
+            property={selectedInspection ? getProperty(selectedInspection.propertyId) : properties[0]}
+            tenant={selectedInspection ? getTenant(selectedInspection.tenantId) : tenants[0]}
+            onSave={handleInspectionFormSave}
+            onCancel={() => { setInspectionFormModal(false); setSelectedInspection(null); }}
+          />
         )}
       </Dialog>
     </div>
