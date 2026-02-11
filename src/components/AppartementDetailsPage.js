@@ -26,10 +26,8 @@ const AppartementDetailsPage = () => {
     const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
     const [clientEmail, setClientEmail] = useState('');
     const [customMessage, setCustomMessage] = useState('');
-    // DPE (diagnostic énergétique)
-    const [dpeReducedFile, setDpeReducedFile] = useState(null);
-    const [dpeDetailedFile, setDpeDetailedFile] = useState(null);
-    const [dpePreviewUrl, setDpePreviewUrl] = useState(null);
+    // DPE (diagnostic énergétique) - Catégorie (A-G)
+    const [dpeCategory, setDpeCategory] = useState('');
     
     // États pour les spécifications de l'appartement
     const [apartmentSpecs, setApartmentSpecs] = useState({});
@@ -77,6 +75,7 @@ const AppartementDetailsPage = () => {
                     setImageURLs(data.imageURLs || []);
                     setSelectedImage(data.imageURLs ? data.imageURLs[0] : null);
                     setContractEndDate(data.contractEndDate || '');
+                    setDpeCategory(data.dpeCategory || '');
                 } else {
                     setError('Appartement introuvable.');
                 }
@@ -139,35 +138,18 @@ const AppartementDetailsPage = () => {
         }
     };
 
-    // Upload DPE image helper
-    const uploadDpeImage = async (file) => {
-        return await uploadImageToCloudinary(file);
-    };
 
-    const handleUploadDpe = async () => {
+
+    // Mettre à jour la catégorie DPE
+    const handleDpeCategoryChange = async (category) => {
         if (!user) return;
         try {
             const docRef = doc(db, 'locations', locationId, 'appartements', appartementId);
-            const updates = {};
-            if (dpeReducedFile) {
-                const url = await uploadDpeImage(dpeReducedFile);
-                updates['diagnostics.dpeImageReducedUrl'] = url;
-            }
-            if (dpeDetailedFile) {
-                const url = await uploadDpeImage(dpeDetailedFile);
-                updates['diagnostics.dpeImageDetailedUrl'] = url;
-            }
-            if (Object.keys(updates).length > 0) {
-                await updateDoc(docRef, updates);
-                setAppartement({ ...appartement, diagnostics: { ...(appartement.diagnostics || {}), ...updates.diagnostics, ...{
-                    dpeImageReducedUrl: updates['diagnostics.dpeImageReducedUrl'] || (appartement.diagnostics && appartement.diagnostics.dpeImageReducedUrl),
-                    dpeImageDetailedUrl: updates['diagnostics.dpeImageDetailedUrl'] || (appartement.diagnostics && appartement.diagnostics.dpeImageDetailedUrl)
-                } } });
-            }
-            setDpeReducedFile(null);
-            setDpeDetailedFile(null);
+            await updateDoc(docRef, { dpeCategory: category });
+            setDpeCategory(category);
+            setAppartement({ ...appartement, dpeCategory: category });
         } catch (err) {
-            console.error('Erreur upload DPE:', err);
+            console.error('Erreur lors de la mise à jour de la catégorie DPE:', err);
         }
     };
 
@@ -815,49 +797,63 @@ const AppartementDetailsPage = () => {
                                 <h2>Diagnostic énergétique (DPE)</h2>
                                 {user && (
                                     <div className="dpe-actions">
-                                        <label className="dpe-upload">
-                                            <input
-                                                type="file"
-                                                accept="image/png,image/jpeg"
-                                                onChange={(e) => setDpeReducedFile(e.target.files?.[0] || null)}
-                                                className="file-input-hidden"
-                                            />
-                                            Importer réduit (PNG/JPG)
-                                        </label>
-                                        <label className="dpe-upload">
-                                            <input
-                                                type="file"
-                                                accept="image/png,image/jpeg"
-                                                onChange={(e) => setDpeDetailedFile(e.target.files?.[0] || null)}
-                                                className="file-input-hidden"
-                                            />
-                                            Importer détaillé (PNG/JPG)
-                                        </label>
-                                        <button
-                                            className="upload-button"
-                                            onClick={handleUploadDpe}
-                                            disabled={!dpeReducedFile && !dpeDetailedFile}
-                                        >
-                                            Ajouter le diagnostic énergétique
-                                        </button>
+                                        <div className="dpe-categories">
+                                            {['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((category) => (
+                                                <button
+                                                    key={category}
+                                                    className={`dpe-category-btn ${dpeCategory === category ? 'active' : ''}`}
+                                                    onClick={() => handleDpeCategoryChange(category)}
+                                                    title={`Catégorie ${category}`}
+                                                >
+                                                    {category}
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
                                 )}
                             </div>
-                            <div className="dpe-grid">
-                                {appartement?.diagnostics?.dpeImageReducedUrl && (
-                                    <div className="dpe-card" onClick={() => { setDpePreviewUrl(appartement.diagnostics.dpeImageReducedUrl); setIsModalOpen(true); }}>
-                                        <img src={appartement.diagnostics.dpeImageReducedUrl} alt="DPE réduit" />
-                                        <span className="dpe-label">Version réduite</span>
+                            <div className="dpe-display">
+                                <div className="dpe-official-label">
+                                    <div className="dpe-header-official">
+                                        <div className="dpe-logo">ENERGY</div>
+                                        <div className="dpe-type-info">
+                                            <div>Nom du fabricant</div>
+                                            <div>Type</div>
+                                        </div>
                                     </div>
-                                )}
-                                {appartement?.diagnostics?.dpeImageDetailedUrl && (
-                                    <div className="dpe-card" onClick={() => { setDpePreviewUrl(appartement.diagnostics.dpeImageDetailedUrl); setIsModalOpen(true); }}>
-                                        <img src={appartement.diagnostics.dpeImageDetailedUrl} alt="DPE détaillé" />
-                                        <span className="dpe-label">Version détaillée</span>
+
+                                    <div className="dpe-categories-container">
+                                        <div className="dpe-scale">
+                                            {['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((category) => (
+                                                <div
+                                                    key={category}
+                                                    className={`dpe-scale-item dpe-${category.toLowerCase()} ${dpeCategory === category ? 'selected' : ''}`}
+                                                    onClick={() => user && handleDpeCategoryChange(category)}
+                                                    style={{ cursor: user ? 'pointer' : 'default' }}
+                                                >
+                                                    <span className="dpe-letter-item">{category}</span>
+                                                    {dpeCategory === category && <div className="dpe-arrow-selected">◀</div>}
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
-                                )}
-                                {!appartement?.diagnostics?.dpeImageReducedUrl && !appartement?.diagnostics?.dpeImageDetailedUrl && (
-                                    <p>Aucun diagnostic ajouté pour le moment.</p>
+
+                                    <div className="dpe-footer-official">
+                                        <div className="dpe-consumption">XYZ kWh/100</div>
+                                        <div className="dpe-symbols">
+                                            <div className="dpe-symbol">🧺 XY,Z kg</div>
+                                            <div className="dpe-symbol">⏱️ X:YZ h</div>
+                                            <div className="dpe-symbol">💧 XY,Z ℓ</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {dpeCategory && (
+                                    <div className="dpe-selected-display">
+                                        <p>Catégorie sélectionnée :</p>
+                                        <div className={`dpe-selected-badge dpe-${dpeCategory.toLowerCase()}`}>
+                                            {dpeCategory}
+                                        </div>
+                                    </div>
                                 )}
                             </div>
                         </div>
@@ -956,7 +952,7 @@ const AppartementDetailsPage = () => {
                                     <div className="fixed inset-0 bg-black/70 flex items-center justify-center">
                                         <Dialog.Panel className="relative">
                                             <img
-                                                src={dpePreviewUrl || selectedImage}
+                                                src={selectedImage}
                                                 alt="Aperçu"
                                                 className="max-w-[90vw] max-h-[90vh] rounded-lg"
                                             />

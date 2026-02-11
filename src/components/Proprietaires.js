@@ -6,7 +6,7 @@ import { auth } from './firebase-config';
 import * as ownerDataService from '../services/ownerDataService';
 import * as firebaseService from '../services/firebaseService';
 import { buildInspectionPdf } from '../services/inspectionPdf';
-import { sendInspectionForSignature } from '../services/docusignService';
+import { sendInspectionForSignature } from '../services/esignlyService';
 import * as paymentsStorage from '../services/paymentsLocalStorage';
 import InspectionForm from './InspectionForm';
 import {
@@ -454,6 +454,9 @@ const Proprietaires = () => {
   const isAuthenticated = !!auth.currentUser;
   const currentUserId = auth.currentUser?.uid;
 
+  const ESIGNLY_PROXY_URL = process.env.REACT_APP_ESIGNLY_PROXY_URL;
+  const hasEsignly = !!ESIGNLY_PROXY_URL;
+
   // States
   const [selectedOwner, setSelectedOwner] = useState(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
@@ -677,6 +680,10 @@ const Proprietaires = () => {
   };
 
   const requestInspectionSignature = async (inspection) => {
+    if (!hasEsignly) {
+      alert("La signature électronique n'est pas encore configurée. Ajoutez REACT_APP_ESIGNLY_PROXY_URL dans votre fichier .env pour activer eSignly.");
+      return;
+    }
     const signerEmail = window.prompt('Email du signataire (locataire) :');
     if (!signerEmail) return;
     const signerName = window.prompt('Nom du signataire (locataire) :') || 'Signataire';
@@ -688,16 +695,14 @@ const Proprietaires = () => {
         tenant: getTenant(inspection.tenantId),
         sections: inspection.sections || {}
       };
-      const pdfBytes = await buildInspectionPdf(payload);
       await sendInspectionForSignature({
-        pdfBytes,
         signerEmail,
         signerName,
         subject: `Etat des lieux ${inspection.type || ''} - ${payload.property?.address || ''}`
       });
-      alert('Demande de signature envoyée via DocuSign (proxy).');
+      alert('Demande de signature envoyée via eSignly (proxy).');
     } catch (err) {
-      console.error('Erreur DocuSign', err);
+      console.error('Erreur eSignly', err);
       setError(err.message || "Impossible d'envoyer la demande de signature.");
     } finally {
       setActionLoading(false);
@@ -1601,7 +1606,14 @@ const Proprietaires = () => {
               <Button variant="ghost" onClick={() => openInspectionFormModal(i)}>Éditer</Button>
               <Button variant="ghost" onClick={() => deleteInspection(i.id)}>Supprimer</Button>
               <Button variant="ghost" onClick={() => exportInspectionPdf(i)}>Exporter PDF</Button>
-              <Button variant="ghost" onClick={() => requestInspectionSignature(i)}>Signer via DocuSign</Button>
+              <Button
+                variant="ghost"
+                disabled={!hasEsignly}
+                title={hasEsignly ? '' : "Configurer REACT_APP_ESIGNLY_PROXY_URL pour activer eSignly"}
+                onClick={() => requestInspectionSignature(i)}
+              >
+                Signer via eSignly
+              </Button>
             </div>
           </Card>
         ))}
